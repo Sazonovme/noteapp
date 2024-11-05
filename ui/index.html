@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+
+<body>
+
+    <div class="registration-cssave">
+        <form id="form">
+            <h3 class="text-center">Форма входа</h3>
+            <div class="form-group">
+                <input class="form-control item" type="text" name="username" id="username" placeholder="Логин">
+            </div>
+            <div class="form-group">
+                <input class="form-control item" type="password" name="Пароль" id="password" placeholder="Пароль">
+            </div>
+            <div class="form-group">
+                <button id="btn" class="btn btn-primary btn-block create-account" type="submit">Вход в аккаунт</button>
+            </div>
+        </form>
+    </div>
+
+</body>
+
+</html>
+
+<script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+<script>
+
+    document.querySelector('form').addEventListener('submit', event => {
+        event.preventDefault();  // Стоп! Прерываем действие по умолчанию.
+        console.log("click")
+        ob = {
+            code: 200,
+            message: "request"
+        }
+        axios.post('http://localhost:4000/create', {
+            mode: 'no-cors',
+            headers: {
+                'Access-Control-Allow-Origin': '*',
+                Accept: 'application/json',
+                'Content-Type': 'application/json',
+            },
+            data: {
+                code: 123,
+                message: "message of front"
+            }
+        })
+            .then(function (response) {
+                console.log(response);
+            })
+            .catch(function (error) {
+                console.log(error);
+            });
+    })
+
+</script>
