@@ -1,0 +1,4 @@
+{
+    "db_connection" : "host=localhost dbname=notesdb user=notesapp sslmode=disable",
+    "port" : ":8080"
+}
