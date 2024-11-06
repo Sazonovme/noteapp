@@ -10,11 +10,6 @@ type UserRepository struct {
 	store *Sqlstore
 }
 
-type tokens struct {
-	refresh string
-	access  string
-}
-
 func NewUserRepository(store *Sqlstore) *UserRepository {
 	return &UserRepository{
 		store: store,

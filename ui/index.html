@@ -16,7 +16,7 @@
                 <input class="form-control item" type="text" name="username" id="username" placeholder="Логин">
             </div>
             <div class="form-group">
-                <input class="form-control item" type="password" name="Пароль" id="password" placeholder="Пароль">
+                <input class="form-control item" type="password" name="password" id="password" placeholder="Пароль">
             </div>
             <div class="form-group">
                 <button id="btn" class="btn btn-primary btn-block create-account" type="submit">Вход в аккаунт</button>
@@ -31,14 +31,15 @@
 <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
 <script>
 
-    document.querySelector('form').addEventListener('submit', event => {
-        event.preventDefault();  // Стоп! Прерываем действие по умолчанию.
-        console.log("click")
-        ob = {
-            code: 200,
-            message: "request"
-        }
-        axios.post('http://localhost:4000/create', {
+    formElem = document.querySelector('form')
+    formElem.addEventListener('submit', event => {
+        event.preventDefault(); 
+
+        const formData = new FormData(formElem); 
+        const name = formData.get('username');
+        const password = formData.get('password'); 
+
+        axios.post('http://localhost:8080/sign-up', {
             mode: 'no-cors',
             headers: {
                 'Access-Control-Allow-Origin': '*',
@@ -46,8 +47,9 @@
                 'Content-Type': 'application/json',
             },
             data: {
-                code: 123,
-                message: "message of front"
+                login: name,
+                password: password,
+                fingerprint: "this fingerprint "
             }
         })
             .then(function (response) {

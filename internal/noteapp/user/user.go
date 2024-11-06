@@ -5,9 +5,10 @@ import (
 )
 
 type User struct {
-	Id       int    `json:"-"`
-	Login    string `json:"login"`
-	Password string `json:"password"`
+	Id          int    `json:"-"`
+	Login       string `json:"login"`
+	Password    string `json:"password"`
+	Fingerprint string `json:"fingerprint"`
 }
 
 func New() *User {
