@@ -91,10 +91,10 @@ func UpdateTokens(db *sql.DB, oldRefreshToken string, oldFingerPrint string) (*R
 	return refreshSesssion, nil
 }
 
-func createRefreshToken(login string) (string, int64, int64, error) {
+func createRefreshToken(login string) (string, string, string, error) {
 
-	lifeTime := time.Now().Add(30 * 24 * time.Hour).Unix()
-	iat := time.Now().Unix()
+	lifeTime := time.Now().Add(30 * 24 * time.Hour).Format("2006-01-02 15:04:05")
+	iat := time.Now().Format("2006-01-02 15:04:05")
 
 	claims := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
 		"sub": login,    // Subject (user identifier)
@@ -103,26 +103,26 @@ func createRefreshToken(login string) (string, int64, int64, error) {
 	})
 
 	// Подписание токена
-	tokenString, err := claims.SignedString(secretKeyRefresh)
+	tokenString, err := claims.SignedString([]byte(secretKeyRefresh))
 	if err != nil {
-		return "", 0, 0, err
+		return "", "", "", err
 	}
 
-	return tokenString, iat, lifeTime, nil
+	return tokenString, lifeTime, iat, nil
 }
 
 func createAccessToken(login string) (string, error) {
 
-	lifeTime := time.Now().Add(15 * time.Minute).Unix()
+	lifeTime := time.Now().Add(15 * time.Minute).Format("2006-01-02 15:04:05")
 
 	claims := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
-		"sub": login,             // Subject (user identifier)
-		"exp": lifeTime,          // Expiration time
-		"iat": time.Now().Unix(), // Время выпуска
+		"sub": login,                                    // Subject (user identifier)
+		"exp": lifeTime,                                 // Expiration time
+		"iat": time.Now().Format("2006-01-02 15:04:05"), // Время выпуска
 	})
 
 	// Подписание токена
-	tokenString, err := claims.SignedString(secretKeyAccess)
+	tokenString, err := claims.SignedString([]byte(secretKeyAccess))
 	if err != nil {
 		return "", err
 	}
