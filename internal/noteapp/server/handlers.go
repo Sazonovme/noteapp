@@ -18,8 +18,14 @@ func (s *server) handlerCreateUser(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	w.Header().Set("Access-Control-Allow-Origin", "*")
-	w.Header().Set("Access-Control-Allow-Methods", "POST")
+	w.Header().Set("Access-Control-Allow-Methods", "*")
 	w.Header().Set("Access-Control-Allow-Headers", "*")
+
+	// FOR CORS ERROR
+	if r.Method == "OPTIONS" {
+		w.WriteHeader(http.StatusOK)
+		return
+	}
 
 	if r.Method != http.MethodPost {
 		s.error(w, r, http.StatusMethodNotAllowed, errMethodNotAllowed)
@@ -27,16 +33,57 @@ func (s *server) handlerCreateUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	u := user.New()
-	err := json.NewDecoder(r.Body).Decode(&u)
-	if err != nil || u.Login == "" || u.Password == "" {
-		s.error(w, r, http.StatusNoContent, errNoUserData)
+	type loginPassword struct {
+		Login       string `json:"login"`
+		Password    string `json:"password"`
+		Fingerprint string `json:"fingerprint"`
+	}
+	type data struct {
+		Data loginPassword `json:"data"`
+	}
+	d := &data{}
+
+	err := json.NewDecoder(r.Body).Decode(d)
+	if err != nil || d.Data.Login == "" || d.Data.Password == "" || d.Data.Fingerprint == "" {
+		s.error(w, r, http.StatusInternalServerError, errNoUserData)
+		return
 	}
 
+	u := user.New()
+	u.Login = d.Data.Login
+	u.Fingerprint = d.Data.Fingerprint
+	u.Password = d.Data.Password
 	err = s.store.UserRepository.CreateUser(u)
 	if err != nil {
 		s.error(w, r, http.StatusConflict, err)
+		return
 	}
+
+	// Make JWT tokens
+	refSession, err := MakeRefreshSession(s.store.Db, u.Login, u.Fingerprint)
+	if err != nil {
+		s.error(w, r, http.StatusInternalServerError, err)
+		return
+	}
+
+	// Set cookie
+	cookie := &http.Cookie{
+		HttpOnly: true,
+		Name:     "refreshToken",
+		Value:    refSession.refreshToken,
+	}
+	http.SetCookie(w, cookie)
+
+	m := map[string]string{
+		"accessToken": refSession.accessToken,
+	}
+
+	err = json.NewEncoder(w).Encode(m)
+	if err != nil {
+		logger.NewLog("server", "handlerCreateUser", err, m, 6, "http response: json encode error")
+		return
+	}
+	w.WriteHeader(http.StatusCreated)
 
 }
 
