@@ -18,10 +18,20 @@ var (
 type RefreshSession struct {
 	accessToken  string
 	refreshToken string
+	exp          string
+}
+
+type UserClaims struct {
+	Subr      string `json:"subr"`
+	RegClaims jwt.RegisteredClaims
 }
 
 func MakeRefreshSession(db *sql.DB, login string, fingerprint string) (*RefreshSession, error) {
-	aToken, err := createAccessToken(login)
+
+	// Удалить старые токены если такие были
+	db.Exec("DELETE FROM refreshTokens WHERE login = $1 AND fingerprint = $2", login, fingerprint)
+
+	aToken, expAccess, err := createAccessToken(login)
 	if err != nil {
 		return nil, err
 	}
@@ -38,34 +48,21 @@ func MakeRefreshSession(db *sql.DB, login string, fingerprint string) (*RefreshS
 	return &RefreshSession{
 		accessToken:  aToken,
 		refreshToken: rToken,
+		exp:          expAccess.Time.Format("2006-01-02 15:04"),
 	}, nil
 }
 
 func UpdateTokens(db *sql.DB, oldRefreshToken string, oldFingerPrint string) (*RefreshSession, error) {
 
 	// Проверка валидности токена
-	oldJWT, err := verifyToken(oldRefreshToken, secretKeyRefresh)
+	claims, err := verifyToken(oldRefreshToken, secretKeyRefresh)
 	if err != nil {
 		return nil, err
 	}
 
-	// Проверка времени токена
-	claims, ok := oldJWT.Claims.(jwt.MapClaims)
-	if !ok {
-		return nil, errors.New("can't convert token's claims to standard claims")
-	}
-
-	var tm time.Time
-	switch exp := claims["exp"].(type) {
-	case float64:
-		tm = time.Unix(int64(exp), 0)
-	case json.Number:
-		v, _ := exp.Int64()
-		tm = time.Unix(v, 0)
-	}
-
-	if tm.Add(-30*time.Second).Unix() <= time.Now().Unix() {
-		return nil, errors.New("token lifetime has expired")
+	expTime := checkExpiredTime(claims)
+	if !expTime {
+		return nil, errors.New("token lifetime expired")
 	}
 
 	rows, err := db.Query("DELETE FROM refreshTokens WHERE refreshtoken = $1 AND fingerprint = $2 RETURNING login, fingerprint", oldRefreshToken, oldFingerPrint)
@@ -111,33 +108,32 @@ func createRefreshToken(login string) (string, string, string, error) {
 	return tokenString, lifeTime, iat, nil
 }
 
-func createAccessToken(login string) (string, error) {
+func createAccessToken(login string) (string, *jwt.NumericDate, error) {
 
-	lifeTime := time.Now().Add(15 * time.Minute).Format("2006-01-02 15:04:05")
+	lifeTime := jwt.NewNumericDate(time.Now().Add(15 * time.Minute))
 
 	claims := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
-		"sub": login,                                    // Subject (user identifier)
-		"exp": lifeTime,                                 // Expiration time
-		"iat": time.Now().Format("2006-01-02 15:04:05"), // Время выпуска
+		"sub": login,             // Subject (user identifier)
+		"exp": lifeTime,          // Expiration time
+		"iat": time.Now().Unix(), // Время выпуска
 	})
 
 	// Подписание токена
 	tokenString, err := claims.SignedString([]byte(secretKeyAccess))
 	if err != nil {
-		return "", err
+		return "", nil, err
 	}
 
-	return tokenString, nil
-
+	return tokenString, lifeTime, nil
 }
 
-// Function to verify JWT tokens
-func verifyToken(tokenString string, secretKey string) (*jwt.Token, error) {
+func verifyToken(tokenString string, secretKey string) (jwt.MapClaims, error) {
 
 	// Parse the token with the secret key
+	claims := jwt.MapClaims{}
 
-	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
-		return secretKey, nil
+	token, err := jwt.ParseWithClaims(tokenString, &claims, func(token *jwt.Token) (interface{}, error) {
+		return []byte(secretKey), nil
 	})
 
 	// Check for verification errors
@@ -151,13 +147,32 @@ func verifyToken(tokenString string, secretKey string) (*jwt.Token, error) {
 	}
 
 	// Return the verified token
-	return token, nil
+	return claims, nil
 }
 
 func VerifyAccessToken(tokenString string) error {
-	_, err := verifyToken(tokenString, secretKeyAccess)
+	claims, err := verifyToken(tokenString, secretKeyAccess)
 	if err != nil {
 		return err
 	}
+
+	expTime := checkExpiredTime(claims)
+
+	if !expTime {
+		return errors.New("token lifetime has expired")
+	}
 	return nil
+}
+
+func checkExpiredTime(claims jwt.MapClaims) bool {
+	var tm time.Time
+	switch exp := claims["exp"].(type) {
+	case float64:
+		tm = time.Unix(int64(exp), 0)
+	case json.Number:
+		v, _ := exp.Int64()
+		tm = time.Unix(v, 0)
+	}
+	//fmt.Println("exp:", tm.Add(-30*time.Second), "now", time.Now())
+	return tm.Add(-30*time.Second).Unix() >= time.Now().Unix()
 }

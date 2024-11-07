@@ -22,6 +22,11 @@ func (r *UserRepository) CreateUser(u *user.User) error {
 	_, err := r.FindByLogin(u.Login)
 	if err != nil {
 
+		err = u.ValidateBeforeCreate()
+		if err != nil {
+			return err
+		}
+
 		// encrypt password
 		if _, err = u.EncryptPassword(); err != nil {
 			return err

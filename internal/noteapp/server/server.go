@@ -19,8 +19,19 @@ func NewServer(store *sqlstore.Sqlstore) *server {
 
 func (s *server) configureHandler() {
 	srv := http.NewServeMux()
-	srv.HandleFunc("/sign-up", s.handlerCreateUser)
-	srv.HandleFunc("/sign-in", ChainMiddleware(s.handlerAuthUser))
+	srv.HandleFunc("/sign-up", ChainMiddleware(
+		s.handlerCreateUser,
+		s.middlewareNoCors(),
+		s.middlewareAddheadersNoCors()))
+	srv.HandleFunc("/sign-in", ChainMiddleware(
+		s.handlerAuthUser,
+		s.middlewareNoCors(),
+		s.middlewareAddheadersNoCors()))
+	srv.HandleFunc("/notes", ChainMiddleware(
+		s.handlerNotes,
+		s.middlewareNoCors(),
+		//s.middlewareAddheadersNoCors()))
+		s.middlewareAuth()))
 	s.handler = srv
 }
 

@@ -3,29 +3,27 @@ package server
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net/http"
 	"noteapp/internal/noteapp/user"
 	"noteapp/pkg/logger"
+
+	"github.com/asaskevich/govalidator"
 )
 
 var (
-	errMethodNotAllowed       = errors.New("method not allowed")
-	errNoUserData             = errors.New("login or password not filled in")
-	errInvalidPasswordOrLogin = errors.New("invalid password or login")
+	errMethodNotAllowed = errors.New("method not allowed")
 )
 
+type requestData struct {
+	Data struct {
+		Login       string `json:"login" valid:"required"`
+		Password    string `json:"password" valid:"required"`
+		Fingerprint string `json:"fingerprint" valid:"required"`
+	} `json:"data"`
+}
+
 func (s *server) handlerCreateUser(w http.ResponseWriter, r *http.Request) {
-
-	w.Header().Set("Content-Type", "application/json")
-	w.Header().Set("Access-Control-Allow-Origin", "*")
-	w.Header().Set("Access-Control-Allow-Methods", "*")
-	w.Header().Set("Access-Control-Allow-Headers", "*")
-
-	// FOR CORS ERROR
-	if r.Method == "OPTIONS" {
-		w.WriteHeader(http.StatusOK)
-		return
-	}
 
 	if r.Method != http.MethodPost {
 		s.error(w, r, http.StatusMethodNotAllowed, errMethodNotAllowed)
@@ -33,19 +31,15 @@ func (s *server) handlerCreateUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	type loginPassword struct {
-		Login       string `json:"login"`
-		Password    string `json:"password"`
-		Fingerprint string `json:"fingerprint"`
-	}
-	type data struct {
-		Data loginPassword `json:"data"`
-	}
-	d := &data{}
-
+	d := &requestData{}
 	err := json.NewDecoder(r.Body).Decode(d)
-	if err != nil || d.Data.Login == "" || d.Data.Password == "" || d.Data.Fingerprint == "" {
-		s.error(w, r, http.StatusInternalServerError, errNoUserData)
+	if err != nil {
+		s.error(w, r, http.StatusInternalServerError, err)
+		return
+	}
+
+	if _, err := govalidator.ValidateStruct(d); err != nil {
+		s.respond(w, r, http.StatusBadRequest, err)
 		return
 	}
 
@@ -55,7 +49,43 @@ func (s *server) handlerCreateUser(w http.ResponseWriter, r *http.Request) {
 	u.Password = d.Data.Password
 	err = s.store.UserRepository.CreateUser(u)
 	if err != nil {
-		s.error(w, r, http.StatusConflict, err)
+		s.error(w, r, http.StatusInternalServerError, err)
+		return
+	}
+
+	w.WriteHeader(http.StatusCreated)
+
+}
+
+func (s *server) handlerAuthUser(w http.ResponseWriter, r *http.Request) {
+
+	if r.Method != http.MethodPost {
+		s.error(w, r, http.StatusMethodNotAllowed, errMethodNotAllowed)
+		logger.NewLog("server", "handlerCreateUser", errMethodNotAllowed, nil, 5, "Method: "+r.Method+" not allowed")
+		return
+	}
+
+	d := &requestData{}
+	err := json.NewDecoder(r.Body).Decode(d)
+	if err != nil {
+		s.error(w, r, http.StatusInternalServerError, err)
+		return
+	}
+
+	u := user.New()
+	u.Login = d.Data.Login
+	u.Fingerprint = d.Data.Fingerprint
+	u.Password = d.Data.Password
+
+	u2, err := s.store.UserRepository.FindByLogin(u.Login)
+	if err != nil {
+		s.error(w, r, http.StatusUnauthorized, err)
+		return
+	}
+
+	err = u2.ComparePassword(u.Password)
+	if err != nil {
+		s.error(w, r, http.StatusUnauthorized, err)
 		return
 	}
 
@@ -76,6 +106,7 @@ func (s *server) handlerCreateUser(w http.ResponseWriter, r *http.Request) {
 
 	m := map[string]string{
 		"accessToken": refSession.accessToken,
+		"exp":         refSession.exp,
 	}
 
 	err = json.NewEncoder(w).Encode(m)
@@ -83,36 +114,27 @@ func (s *server) handlerCreateUser(w http.ResponseWriter, r *http.Request) {
 		logger.NewLog("server", "handlerCreateUser", err, m, 6, "http response: json encode error")
 		return
 	}
-	w.WriteHeader(http.StatusCreated)
-
 }
 
-func (s *server) handlerAuthUser(w http.ResponseWriter, r *http.Request) {
+func (s *server) handlerNotes(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 	w.Header().Set("Access-Control-Allow-Methods", "POST")
 	w.Header().Set("Access-Control-Allow-Headers", "*")
 
-	if r.Method != http.MethodGet {
-		s.error(w, r, http.StatusMethodNotAllowed, errMethodNotAllowed)
-		logger.NewLog("server", "handlerCreateUser", errMethodNotAllowed, nil, 5, "Method: "+r.Method+" not allowed")
+	if r.Method != http.MethodPost {
 		return
 	}
-	u := user.New()
-	err := json.NewDecoder(r.Body).Decode(&u)
-	if err != nil {
-		s.error(w, r, http.StatusUnauthorized, err)
+
+	data := map[string]string{
+		"result": "access TRUE",
 	}
 
-	u2, err := s.store.UserRepository.FindByLogin(u.Login)
+	err := json.NewEncoder(w).Encode(data)
 	if err != nil {
-		s.error(w, r, http.StatusUnauthorized, errInvalidPasswordOrLogin)
-	}
-
-	err = u2.ComparePassword(u.Password)
-	if err != nil {
-		s.error(w, r, http.StatusUnauthorized, errInvalidPasswordOrLogin)
+		s.error(w, r, http.StatusInternalServerError, err)
+		return
 	}
 
 }
@@ -139,10 +161,69 @@ func ChainMiddleware(f http.HandlerFunc, middlewares ...Middleware) http.Handler
 	return f
 }
 
-func middlewareCreateUser() Middleware {
+func (s *server) middlewareNoCors() Middleware {
+	return func(f http.HandlerFunc) http.HandlerFunc {
+		return func(w http.ResponseWriter, r *http.Request) {
+			if r.Method == "OPTIONS" {
+				w.Header().Set("Content-Type", "application/json")
+				w.Header().Set("Access-Control-Allow-Origin", "*")
+				w.Header().Set("Access-Control-Allow-Methods", "POST")
+				w.Header().Set("Access-Control-Allow-Headers", "*")
+				fmt.Println("OPTIONS")
+				return
+			}
+			f(w, r)
+		}
+	}
+}
+
+func (s *server) middlewareAddheadersNoCors() Middleware {
+	return func(f http.HandlerFunc) http.HandlerFunc {
+		return func(w http.ResponseWriter, r *http.Request) {
+			w.Header().Set("Content-Type", "application/json")
+			w.Header().Set("Access-Control-Allow-Origin", "*")
+			w.Header().Set("Access-Control-Allow-Methods", "POST")
+			w.Header().Set("Access-Control-Allow-Headers", "*")
+			fmt.Println("add no cors headers")
+			f(w, r)
+		}
+	}
+}
+
+func (s *server) middlewareAuth() Middleware {
 	return func(f http.HandlerFunc) http.HandlerFunc {
 		return func(w http.ResponseWriter, r *http.Request) {
 
+			// if r.Method != http.MethodPost {
+			// 	return
+			// }
+			w.Header().Set("Content-Type", "application/json")
+			w.Header().Set("Access-Control-Allow-Origin", "*")
+			w.Header().Set("Access-Control-Allow-Methods", "POST")
+			w.Header().Set("Access-Control-Allow-Headers", "*")
+
+			if r.Method == http.MethodOptions {
+				return
+			}
+
+			type data struct {
+				Data struct {
+					AccessToken string `json:"accessToken"`
+				} `json:"data"`
+			}
+			d := &data{}
+
+			err := json.NewDecoder(r.Body).Decode(d)
+			if err != nil {
+				s.error(w, r, http.StatusInternalServerError, err)
+				return
+			}
+
+			err = VerifyAccessToken(d.Data.AccessToken)
+			if err != nil {
+				s.error(w, r, http.StatusUnauthorized, err)
+				return
+			}
 			f(w, r)
 		}
 	}

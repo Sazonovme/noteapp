@@ -10,8 +10,8 @@
 <body>
 
     <div class="registration-cssave">
-        <form id="form">
-            <h3 class="text-center">Форма входа</h3>
+        <form id="reg-form">
+            <h3 class="text-center">Регистрация</h3>
             <div class="form-group">
                 <input class="form-control item" type="text" name="username" id="username" placeholder="Логин">
             </div>
@@ -24,6 +24,23 @@
         </form>
     </div>
 
+    <div class="registration-cssave">
+        <form id="auth-form">
+            <h3 class="text-center">Авторизация</h3>
+            <div class="form-group">
+                <input class="form-control item" type="text" name="username" id="username" placeholder="Логин">
+            </div>
+            <div class="form-group">
+                <input class="form-control item" type="password" name="password" id="password" placeholder="Пароль">
+            </div>
+            <div class="form-group">
+                <button id="btn" class="btn btn-primary btn-block create-account" type="submit">Вход в аккаунт</button>
+            </div>
+        </form>
+    </div>
+
+    <button id="btn" onclick="notes()">Получить данные</button>
+
 </body>
 
 </html>
@@ -31,13 +48,16 @@
 <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
 <script>
 
-    formElem = document.querySelector('form')
+    // registration
+    formElem = document.getElementById('reg-form')
     formElem.addEventListener('submit', event => {
-        event.preventDefault(); 
+        event.preventDefault();
 
-        const formData = new FormData(formElem); 
+        const formData = new FormData(formElem);
         const name = formData.get('username');
-        const password = formData.get('password'); 
+        const password = formData.get('password');
+
+        console.log(name, password)
 
         axios.post('http://localhost:8080/sign-up', {
             mode: 'no-cors',
@@ -59,5 +79,54 @@
                 console.log(error);
             });
     })
+
+
+    // auth
+    formElem2 = document.getElementById('auth-form')
+    formElem2.addEventListener('submit', event => {
+        event.preventDefault();
+
+        const formData2 = new FormData(formElem2);
+        const name2 = formData2.get('username');
+        const password2 = formData2.get('password');
+
+        axios.post('http://localhost:8080/sign-in', {
+            mode: 'no-cors',
+            headers: {
+                'Access-Control-Allow-Origin': '*',
+                Accept: 'application/json',
+                'Content-Type': 'application/json',
+            },
+            data: {
+                login: name2,
+                password: password2,
+                fingerprint: "this fingerprint "
+            }
+        })
+            .then(res => sessionStorage.setItem('accessToken', res.data.accessToken))
+            .catch(function (error) {
+                console.log(error);
+            });
+    })
+
+    function notes() {
+        console.log("click")
+        accessToken = sessionStorage.getItem('accessToken')
+        console.log("access token: " + accessToken)
+
+        axios.post('http://localhost:8080/notes', {
+            mode: 'no-cors',
+            headers: {
+                'Access-Control-Allow-Origin': '*',
+                Accept: 'application/json',
+                'Content-Type': 'application/json',
+            },
+            data: {
+                accessToken: accessToken,
+            }
+        }).then(
+            res => console.log(res)
+        )
+    }
 
 </script>
