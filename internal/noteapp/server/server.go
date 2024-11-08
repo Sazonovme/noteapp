@@ -21,16 +21,13 @@ func (s *server) configureHandler() {
 	srv := http.NewServeMux()
 	srv.HandleFunc("/sign-up", ChainMiddleware(
 		s.handlerCreateUser,
-		s.middlewareNoCors(),
-		s.middlewareAddheadersNoCors()))
+		s.middlewareNoCors()))
 	srv.HandleFunc("/sign-in", ChainMiddleware(
 		s.handlerAuthUser,
-		s.middlewareNoCors(),
-		s.middlewareAddheadersNoCors()))
+		s.middlewareNoCors()))
 	srv.HandleFunc("/notes", ChainMiddleware(
 		s.handlerNotes,
 		s.middlewareNoCors(),
-		//s.middlewareAddheadersNoCors()))
 		s.middlewareAuth()))
 	s.handler = srv
 }

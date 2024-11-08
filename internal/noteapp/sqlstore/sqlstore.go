@@ -8,6 +8,7 @@ import (
 type Sqlstore struct {
 	Db             *sql.DB
 	UserRepository *UserRepository
+	AuthRepository *AuthRepository
 }
 
 // Constructor
@@ -21,6 +22,12 @@ func NewStore(db_connection string) (*Sqlstore, error) {
 	if err := db.Ping(); err != nil {
 		return nil, err
 	}
+	store := &Sqlstore{Db: db}
+	store.ConfigureRepositories()
+	return store, nil
+}
 
-	return &Sqlstore{Db: db}, nil
+func (s *Sqlstore) ConfigureRepositories() {
+	s.AuthRepository = NewAuthRepository(s)
+	s.UserRepository = NewUserRepository(s)
 }

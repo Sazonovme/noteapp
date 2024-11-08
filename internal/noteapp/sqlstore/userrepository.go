@@ -64,26 +64,3 @@ func (r *UserRepository) FindByLogin(login string) (*user.User, error) {
 	}
 	return u, nil
 }
-
-// func (r *UserRepository) AuthenticateUser(login string) error {
-
-// 	// На 24 часа вперед
-// 	t := time.Now()
-// 	t = t.Add(24 * time.Hour)
-
-// 	u := user.New()
-// 	err := r.store.Db.QueryRow(
-// 		"SELECT login FROM refreshTokens WHERE login = $1 AND exp < $2", login,
-// 	).Scan(
-// 		&u.Login,
-// 	)
-// 	if err != nil {
-// 		if err == sql.ErrNoRows {
-// 			// создаем
-
-// 		}
-// 		return err
-// 	}
-// 	// Создать новую пару токенов и записать в базу
-// 	// Вернуть клиенту
-// }

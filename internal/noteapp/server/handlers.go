@@ -89,24 +89,22 @@ func (s *server) handlerAuthUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Make JWT tokens
-	refSession, err := MakeRefreshSession(s.store.Db, u.Login, u.Fingerprint)
+	refSession, err := s.store.AuthRepository.MakeRefreshSession(u.Login, u.Fingerprint)
 	if err != nil {
 		s.error(w, r, http.StatusInternalServerError, err)
 		return
 	}
 
-	// Set cookie
 	cookie := &http.Cookie{
 		HttpOnly: true,
 		Name:     "refreshToken",
-		Value:    refSession.refreshToken,
+		Value:    refSession.RefreshToken,
 	}
 	http.SetCookie(w, cookie)
 
 	m := map[string]string{
-		"accessToken": refSession.accessToken,
-		"exp":         refSession.exp,
+		"accessToken": refSession.AccessToken,
+		"exp":         refSession.Exp,
 	}
 
 	err = json.NewEncoder(w).Encode(m)
@@ -124,6 +122,7 @@ func (s *server) handlerNotes(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Access-Control-Allow-Headers", "*")
 
 	if r.Method != http.MethodPost {
+		fmt.Println("method OPTIONS in handler notes")
 		return
 	}
 
@@ -139,7 +138,6 @@ func (s *server) handlerNotes(w http.ResponseWriter, r *http.Request) {
 
 }
 
-// //////// Respond error //////////
 func (s *server) error(w http.ResponseWriter, r *http.Request, statusCode int, err error) {
 	s.respond(w, r, statusCode, map[string]string{"error": err.Error()})
 }
@@ -151,7 +149,6 @@ func (s *server) respond(w http.ResponseWriter, r *http.Request, statusCode int,
 	}
 }
 
-// //////// MiddleWare //////////
 type Middleware func(http.HandlerFunc) http.HandlerFunc
 
 func ChainMiddleware(f http.HandlerFunc, middlewares ...Middleware) http.HandlerFunc {
@@ -164,27 +161,14 @@ func ChainMiddleware(f http.HandlerFunc, middlewares ...Middleware) http.Handler
 func (s *server) middlewareNoCors() Middleware {
 	return func(f http.HandlerFunc) http.HandlerFunc {
 		return func(w http.ResponseWriter, r *http.Request) {
-			if r.Method == "OPTIONS" {
-				w.Header().Set("Content-Type", "application/json")
-				w.Header().Set("Access-Control-Allow-Origin", "*")
-				w.Header().Set("Access-Control-Allow-Methods", "POST")
-				w.Header().Set("Access-Control-Allow-Headers", "*")
-				fmt.Println("OPTIONS")
-				return
-			}
-			f(w, r)
-		}
-	}
-}
-
-func (s *server) middlewareAddheadersNoCors() Middleware {
-	return func(f http.HandlerFunc) http.HandlerFunc {
-		return func(w http.ResponseWriter, r *http.Request) {
 			w.Header().Set("Content-Type", "application/json")
 			w.Header().Set("Access-Control-Allow-Origin", "*")
 			w.Header().Set("Access-Control-Allow-Methods", "POST")
 			w.Header().Set("Access-Control-Allow-Headers", "*")
-			fmt.Println("add no cors headers")
+			if r.Method == "OPTIONS" {
+				fmt.Println("OPTIONS")
+				return
+			}
 			f(w, r)
 		}
 	}
@@ -194,9 +178,6 @@ func (s *server) middlewareAuth() Middleware {
 	return func(f http.HandlerFunc) http.HandlerFunc {
 		return func(w http.ResponseWriter, r *http.Request) {
 
-			// if r.Method != http.MethodPost {
-			// 	return
-			// }
 			w.Header().Set("Content-Type", "application/json")
 			w.Header().Set("Access-Control-Allow-Origin", "*")
 			w.Header().Set("Access-Control-Allow-Methods", "POST")
@@ -219,7 +200,7 @@ func (s *server) middlewareAuth() Middleware {
 				return
 			}
 
-			err = VerifyAccessToken(d.Data.AccessToken)
+			err = s.store.AuthRepository.VerifyAccessToken(d.Data.AccessToken)
 			if err != nil {
 				s.error(w, r, http.StatusUnauthorized, err)
 				return
