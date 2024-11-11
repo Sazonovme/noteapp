@@ -41,6 +41,8 @@
 
     <button id="btn" onclick="notes()">Получить данные</button>
 
+    <button id="btn" onclick="update()">Обновить токены</button>
+
 </body>
 
 </html>
@@ -100,15 +102,19 @@
             data: {
                 login: name2,
                 password: password2,
-                fingerprint: "this fingerprint "
+                fingerprint: "this fingerprint"
             }
         })
-            .then(res => sessionStorage.setItem('accessToken', res.data.accessToken))
+            .then(res => {
+                sessionStorage.setItem('accessToken', res.data.accessToken)
+                sessionStorage.setItem('refreshToken', res.data.refreshToken)
+            })
             .catch(function (error) {
                 console.log(error);
             });
     })
 
+    // check access
     function notes() {
         console.log("click")
         accessToken = sessionStorage.getItem('accessToken')
@@ -123,6 +129,28 @@
             },
             data: {
                 accessToken: accessToken,
+            }
+        }).then(
+            res => console.log(res)
+        )
+    }
+
+    // update token
+    function update() {
+
+        refToken = sessionStorage.getItem('refreshToken')
+        console.log(refToken)
+
+        axios.post('http://localhost:8080/refresh-token', {
+            mode: 'no-cors',
+            headers: {
+                'Access-Control-Allow-Origin': '*',
+                Accept: 'application/json',
+                'Content-Type': 'application/json',
+            },
+            data: {
+                refreshToken: refToken,
+                fingerprint: "this fingerprint"
             }
         }).then(
             res => console.log(res)
