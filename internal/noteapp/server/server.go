@@ -29,6 +29,9 @@ func (s *server) configureHandler() {
 		s.handlerNotes,
 		s.middlewareNoCors(),
 		s.middlewareAuth()))
+	srv.HandleFunc("/refresh-token",
+		s.handlerRefreshToken,
+	)
 	s.handler = srv
 }
 
@@ -57,7 +60,7 @@ func Start(c *ConfigServer) error {
 
 	// start server
 	logger.NewLog("server", "Start", nil, nil, 6, "Server starting...")
-	err = http.ListenAndServe(c.Port, srv)
+	err = http.ListenAndServe(":"+c.Port, srv)
 	if err != nil {
 		return err
 	}
