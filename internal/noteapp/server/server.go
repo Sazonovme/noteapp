@@ -39,31 +39,26 @@ func (s *server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	s.handler.ServeHTTP(w, r)
 }
 
-func Start(c *ConfigServer) error {
+func Start(c *ConfigServer) {
 
-	// connect store
 	store, err := sqlstore.NewStore(c.Db_connection)
 	if err != nil {
-		logger.NewLog("server", "Start", err, nil, 1, "Server can`t start")
+		logger.NewLog("server.go - Start() - sqlstore.NewStore()", 1, err, "Failed to create *sqlstore.Sqlstore", nil)
+		return
 	}
-
 	defer store.Db.Close()
 
-	// new server
 	srv := NewServer(store)
 
-	//configure router server
 	srv.configureHandler()
 
-	// configure user repository
 	srv.store.UserRepository = sqlstore.NewUserRepository(srv.store)
 
-	// start server
-	logger.NewLog("server", "Start", nil, nil, 6, "Server starting...")
+	logger.NewLog("server.go - Start() - http.ListenAndServe()", 5, nil, "Server starting...", nil)
+
 	err = http.ListenAndServe(":"+c.Port, srv)
 	if err != nil {
-		return err
+		logger.NewLog("server.go - Start() - http.ListenAndServe()", 1, err, "Failed to start server", nil)
+		return
 	}
-	logger.NewLog("server", "Start", nil, nil, 6, "Server stoped")
-	return nil
 }

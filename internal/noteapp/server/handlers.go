@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"net/http"
 	"noteapp/internal/noteapp/user"
-	"noteapp/pkg/logger"
 
 	"github.com/asaskevich/govalidator"
 )
@@ -27,7 +26,7 @@ func (s *server) handlerCreateUser(w http.ResponseWriter, r *http.Request) {
 
 	if r.Method != http.MethodPost {
 		s.error(w, r, http.StatusMethodNotAllowed, errMethodNotAllowed)
-		logger.NewLog("server", "handlerCreateUser", errMethodNotAllowed, nil, 5, "Method: "+r.Method+" not allowed")
+		//logger.NewLog("server", "handlerCreateUser", errMethodNotAllowed, nil, 5, "Method: "+r.Method+" not allowed")
 		return
 	}
 
@@ -61,7 +60,7 @@ func (s *server) handlerAuthUser(w http.ResponseWriter, r *http.Request) {
 
 	if r.Method != http.MethodPost {
 		s.error(w, r, http.StatusMethodNotAllowed, errMethodNotAllowed)
-		logger.NewLog("server", "handlerCreateUser", errMethodNotAllowed, nil, 5, "Method: "+r.Method+" not allowed")
+		//logger.NewLog("server", "handlerCreateUser", errMethodNotAllowed, nil, 5, "Method: "+r.Method+" not allowed")
 		return
 	}
 
@@ -110,7 +109,7 @@ func (s *server) handlerAuthUser(w http.ResponseWriter, r *http.Request) {
 
 	err = json.NewEncoder(w).Encode(m)
 	if err != nil {
-		logger.NewLog("server", "handlerCreateUser", err, m, 6, "http response: json encode error")
+		//logger.NewLog("server", "handlerCreateUser", err, m, 6, "http response: json encode error")
 		return
 	}
 }
@@ -183,7 +182,7 @@ func (s *server) handlerRefreshToken(w http.ResponseWriter, r *http.Request) {
 
 	err = json.NewEncoder(w).Encode(m)
 	if err != nil {
-		logger.NewLog("server", "handlerCreateUser", err, m, 6, "http response: json encode error")
+		//logger.NewLog("server", "handlerCreateUser", err, m, 6, "http response: json encode error")
 		return
 	}
 
