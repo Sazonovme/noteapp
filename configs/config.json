@@ -1,5 +1,10 @@
 {
-    "db_connection" : "host=localhost dbname=notesdb user=notesapp sslmode=disable",
-    "port" : "8080",
-    "log-level" : 6
+    "log-level" : 6,
+    "port" : 8080,
+    "database" : {
+        "host" : "localhost",
+        "username" : "notesapp",
+        "dbname" : "notesdb",
+        "sslmode" : "disable"
+    }
 }

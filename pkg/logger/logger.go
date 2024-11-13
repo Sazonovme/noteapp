@@ -9,6 +9,21 @@ import "github.com/sirupsen/logrus"
 // InfoLevel 4 ignor
 // DebugLevel 5 <- // Информационный уровень (отработка каких то функций - данные)
 
+func SetLevel(level int) {
+	switch level {
+	case 5:
+		logrus.SetLevel(logrus.DebugLevel)
+	case 3:
+		logrus.SetLevel(logrus.WarnLevel)
+	case 2:
+		logrus.SetLevel(logrus.ErrorLevel)
+	case 1:
+		logrus.SetLevel(logrus.FatalLevel)
+	default:
+		logrus.SetLevel(logrus.TraceLevel)
+	}
+}
+
 func NewLog(packageFuncName string, logLevel int, err error, errMessage string, data interface{}) {
 	switch logLevel {
 	case 5:

@@ -1,4 +1,4 @@
-package user
+package model
 
 import (
 	"errors"
@@ -7,15 +7,15 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
+var (
+	errInvalidPassword = errors.New("invalid password")
+)
+
 type User struct {
 	Id          int    `json:"-"`
 	Login       string `json:"login"`
 	Password    string `json:"password"`
 	Fingerprint string `json:"fingerprint"`
-}
-
-func New() *User {
-	return &User{}
 }
 
 func (u *User) ValidateBeforeCreate() error {
@@ -61,7 +61,7 @@ func (u *User) EncryptPassword() (*User, error) {
 func (u *User) ComparePassword(password string) error {
 	err := bcrypt.CompareHashAndPassword([]byte(u.Password), []byte(password))
 	if err != nil {
-		return errors.New("invalid password")
+		return errInvalidPassword
 	}
 	return nil
 }
