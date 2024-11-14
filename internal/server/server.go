@@ -37,11 +37,13 @@ func Start(c *configServer) {
 	// init deps
 	authRepo := repository.NewAuthRepository(db)
 	userRepo := repository.NewUserRepository(db)
+	noteRepo := repository.NewNotesRepository(db)
 
 	authService := service.NewAuthService(authRepo)
 	userService := service.NewUserService(userRepo)
+	noteService := service.NewNotesService(noteRepo)
 
-	handler := api.NewHandler(userService, authService)
+	handler := api.NewHandler(userService, authService, noteService)
 
 	srv := &server{
 		router: handler.InitRouter(),
