@@ -63,7 +63,7 @@ func (h *Handler) InitRouter() *http.ServeMux {
 	)
 
 	router.HandleFunc("/refresh-token", chainMiddleware(
-		h.RefreshToken,
+		h.refreshToken,
 		middlewareNoCors(),
 		middlewareLogIn()),
 	)
@@ -187,7 +187,7 @@ func (h *Handler) authUser(w http.ResponseWriter, r *http.Request) {
 		"OUT - User is authorized "+time.Now().Format("02.01 15:04:05"), respData)
 }
 
-func (h *Handler) RefreshToken(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) refreshToken(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		apiError(w, r, http.StatusMethodNotAllowed, errMethodNotAllowed)
 		return
