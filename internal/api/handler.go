@@ -42,20 +42,13 @@ func (h *Handler) InitRouter() *http.ServeMux {
 	router := http.NewServeMux()
 
 	router.HandleFunc("/sign-up", chainMiddleware(
-		h.CreateUser,
+		h.createUser,
 		middlewareNoCors(),
 		middlewareLogIn()),
 	)
 
 	router.HandleFunc("/sign-in", chainMiddleware(
-		h.AuthUser,
-		middlewareNoCors(),
-		middlewareLogIn()),
-	)
-
-	router.HandleFunc("/notes", chainMiddleware(
-		h.Notes,
-		middlewareAuth(),
+		h.authUser,
 		middlewareNoCors(),
 		middlewareLogIn()),
 	)
@@ -69,7 +62,9 @@ func (h *Handler) InitRouter() *http.ServeMux {
 	return router
 }
 
-func (h *Handler) CreateUser(w http.ResponseWriter, r *http.Request) {
+// USERS
+
+func (h *Handler) createUser(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		apiError(w, r, http.StatusMethodNotAllowed, errMethodNotAllowed)
 		return
@@ -80,6 +75,7 @@ func (h *Handler) CreateUser(w http.ResponseWriter, r *http.Request) {
 	}{}
 	err := json.NewDecoder(r.Body).Decode(&d)
 	if err != nil {
+		logger.NewLog("api - createUser()", 2, err, "Filed to decode r.Body", err)
 		apiError(w, r, http.StatusInternalServerError, nil)
 		return
 	}
@@ -95,7 +91,9 @@ func (h *Handler) CreateUser(w http.ResponseWriter, r *http.Request) {
 		"OUT - User created "+time.Now().Format("02.01 15:04:05"), nil)
 }
 
-func (h *Handler) AuthUser(w http.ResponseWriter, r *http.Request) {
+// AUTH
+
+func (h *Handler) authUser(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		apiError(w, r, http.StatusMethodNotAllowed, errMethodNotAllowed)
 		return
@@ -192,10 +190,4 @@ func (h *Handler) RefreshToken(w http.ResponseWriter, r *http.Request) {
 
 	logger.NewLog("api - RefreshToken()", 5, nil,
 		"OUT - New tokens generated "+time.Now().Format("02.01 15:04:05"), refSession)
-}
-
-func (h *Handler) Notes(w http.ResponseWriter, r *http.Request) {
-	w.WriteHeader(http.StatusAccepted)
-	logger.NewLog("api - Notes()", 5, nil,
-		"OUT - ACCESS TRUE "+time.Now().Format("02.01 15:04:05"), nil)
 }

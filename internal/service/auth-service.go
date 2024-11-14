@@ -39,18 +39,21 @@ func NewAuthService(r AuthRepository) *AuthService {
 func (s *AuthService) MakeRefreshSession(login string, fingerprint string) (*RequestTokenData, error) {
 	err := s.repository.DeleteRefreshSession(login, fingerprint)
 	if err != nil {
+		logger.NewLog("service - MakeRefreshSession()", 2, err, "Filed to delete session in repository", "login: "+login+", fingerprint: "+fingerprint)
 		return nil, err
 	}
 
 	expAccess := time.Now().Add(15 * time.Minute)
 	aToken, err := CreateJWTToken(login, expAccess, secretKeyAccess)
 	if err != nil {
+		logger.NewLog("service - MakeRefreshSession()", 2, err, "Filed to Create JWT Token (Access)", "login: "+login+", expAccess: "+expAccess.Format("2006-01-02 15:04"))
 		return nil, err
 	}
 
 	expRefresh := time.Now().Add(15 * 24 * time.Hour)
 	rToken, err := CreateJWTToken(login, expRefresh, secretKeyRefresh)
 	if err != nil {
+		logger.NewLog("service - MakeRefreshSession()", 2, err, "Filed to Create JWT Token (Refresh)", "login: "+login+", expRefresh: "+expRefresh.Format("2006-01-02 15:04"))
 		return nil, err
 	}
 
@@ -63,6 +66,7 @@ func (s *AuthService) MakeRefreshSession(login string, fingerprint string) (*Req
 	}
 	err = s.repository.WriteRefreshSession(&session)
 	if err != nil {
+		logger.NewLog("service - MakeRefreshSession()", 2, err, "Filed to write refresh session in repository", session)
 		return nil, err
 	}
 
@@ -76,16 +80,19 @@ func (s *AuthService) MakeRefreshSession(login string, fingerprint string) (*Req
 func (s *AuthService) UpdateTokens(oldRefreshToken string, fingerprint string, login string) (*RequestTokenData, error) {
 	_, err := VerifyToken(oldRefreshToken, secretKeyRefresh)
 	if err != nil {
+		logger.NewLog("service - UpdateTokens()", 5, err, "Filed to verify token", nil)
 		return nil, err
 	}
 
 	err = s.repository.DeleteRefreshSession(login, fingerprint)
 	if err != nil {
+		logger.NewLog("service - UpdateTokens()", 2, err, "Filed delete refresh session in repository", "login: "+login+", fingerprint: "+fingerprint)
 		return nil, err
 	}
 
 	refreshSesssion, err := s.MakeRefreshSession(login, fingerprint)
 	if err != nil {
+		logger.NewLog("service - UpdateTokens()", 2, err, "Filed to make refresh session", "login: "+login+", fingerprint: "+fingerprint)
 		return nil, err
 	}
 

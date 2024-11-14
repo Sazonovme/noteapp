@@ -49,7 +49,8 @@ func middlewareAuth() Middleware {
 
 			_, err = service.VerifyAccessToken(d.Data.AccessToken)
 			if err != nil {
-				apiError(w, r, http.StatusInternalServerError, nil)
+				http.Redirect(w, r, "/sign-in", http.StatusUnauthorized)
+				//apiError(w, r, http.StatusInternalServerError, nil)
 				return
 			}
 
