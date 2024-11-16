@@ -31,6 +31,11 @@ type NotesService interface {
 	DelGroup(login string, nameGroup string) error
 	UpdateGroup(login string, id int, nameGroup string) error
 	GetGroupList(login string) ([]repository.Group, error)
+	AddNote(login string, title string, text string, group_id int) error
+	DelNote(id int) error
+	UpdateNote(id int, title string, text string, group_id int) error
+	GetNotesList(login string, group_id int) ([]model.Note, error)
+	GetNote(id int) (model.Note, error)
 }
 
 type Handler struct {
@@ -50,6 +55,8 @@ func NewHandler(userService UserService, authService AuthService, notesService N
 func (h *Handler) InitRouter() *http.ServeMux {
 	router := http.NewServeMux()
 
+	// AUTH
+
 	router.HandleFunc("/sign-up", chainMiddleware(
 		h.createUser,
 		middlewareNoCors(),
@@ -67,6 +74,8 @@ func (h *Handler) InitRouter() *http.ServeMux {
 		middlewareNoCors(),
 		middlewareLogIn()),
 	)
+
+	// GROUPS
 
 	router.HandleFunc("/addGroup", chainMiddleware(
 		h.addGroup,
@@ -91,6 +100,43 @@ func (h *Handler) InitRouter() *http.ServeMux {
 
 	router.HandleFunc("/getGroupList", chainMiddleware(
 		h.getGroupList,
+		middlewareAuth(),
+		middlewareNoCors(),
+		middlewareLogIn()),
+	)
+
+	// NOTES
+
+	router.HandleFunc("/addNote", chainMiddleware(
+		h.addNote,
+		middlewareAuth(),
+		middlewareNoCors(),
+		middlewareLogIn()),
+	)
+
+	router.HandleFunc("/delNote", chainMiddleware(
+		h.delNote,
+		middlewareAuth(),
+		middlewareNoCors(),
+		middlewareLogIn()),
+	)
+
+	router.HandleFunc("/updateNote", chainMiddleware(
+		h.updateNote,
+		middlewareAuth(),
+		middlewareNoCors(),
+		middlewareLogIn()),
+	)
+
+	router.HandleFunc("/getNotesList", chainMiddleware(
+		h.getNotesList,
+		middlewareAuth(),
+		middlewareNoCors(),
+		middlewareLogIn()),
+	)
+
+	router.HandleFunc("/getNote", chainMiddleware(
+		h.getNote,
 		middlewareAuth(),
 		middlewareNoCors(),
 		middlewareLogIn()),
@@ -328,4 +374,143 @@ func (h *Handler) getGroupList(w http.ResponseWriter, r *http.Request) {
 
 	logger.NewLog("api - getGroupList()", 5, nil,
 		"OUT - List geted "+time.Now().Format("02.01 15:04:05"), nil)
+}
+
+// NOTES
+
+func (h *Handler) addNote(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		apiError(w, r, http.StatusMethodNotAllowed, errMethodNotAllowed)
+		return
+	}
+
+	var note model.Note
+	if err := json.NewDecoder(r.Body).Decode(&note); err != nil {
+		logger.NewLog("api - addNote()", 2, err, "Filed to decode r.Body", nil)
+		apiError(w, r, http.StatusInternalServerError, nil)
+		return
+	}
+
+	err := h.NotesService.AddNote(note.User_login, note.Title, note.Text, note.Group_id)
+	if err != nil {
+		apiError(w, r, http.StatusInternalServerError, nil)
+		return
+	}
+
+	w.WriteHeader(http.StatusCreated)
+	logger.NewLog("api - addNote()", 5, nil,
+		"OUT - Note added "+time.Now().Format("02.01 15:04:05"), nil)
+}
+
+func (h *Handler) delNote(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodDelete {
+		apiError(w, r, http.StatusMethodNotAllowed, errMethodNotAllowed)
+		return
+	}
+
+	var id int
+	if err := json.NewDecoder(r.Body).Decode(&id); err != nil {
+		logger.NewLog("api - delNote()", 2, err, "Filed to decode r.Body", nil)
+		apiError(w, r, http.StatusInternalServerError, nil)
+		return
+	}
+
+	err := h.NotesService.DelNote(id)
+	if err != nil {
+		apiError(w, r, http.StatusInternalServerError, nil)
+		return
+	}
+
+	logger.NewLog("api - delNote()", 5, nil,
+		"OUT - Note deleted "+time.Now().Format("02.01 15:04:05"), nil)
+}
+
+func (h *Handler) updateNote(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPut {
+		apiError(w, r, http.StatusMethodNotAllowed, errMethodNotAllowed)
+		return
+	}
+
+	var note model.Note
+	if err := json.NewDecoder(r.Body).Decode(&note); err != nil {
+		logger.NewLog("api - updateNote()", 2, err, "Filed to decode r.Body", nil)
+		apiError(w, r, http.StatusInternalServerError, nil)
+		return
+	}
+
+	err := h.NotesService.UpdateNote(note.Id, note.Title, note.Text, note.Group_id)
+	if err != nil {
+		apiError(w, r, http.StatusInternalServerError, nil)
+		return
+	}
+
+	logger.NewLog("api - updateNote()", 5, nil,
+		"OUT - Note updated "+time.Now().Format("02.01 15:04:05"), nil)
+}
+
+func (h *Handler) getNotesList(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		apiError(w, r, http.StatusMethodNotAllowed, errMethodNotAllowed)
+		return
+	}
+
+	data := struct {
+		Data struct {
+			Login    string `json:"login"`
+			Group_id int    `json:"group_id"`
+		} `json:"data"`
+	}{}
+	if err := json.NewDecoder(r.Body).Decode(&data); err != nil {
+		logger.NewLog("api - getNotesList()", 2, err, "Filed to decode r.Body", nil)
+		apiError(w, r, http.StatusInternalServerError, nil)
+		return
+	}
+
+	list, err := h.NotesService.GetNotesList(data.Data.Login, data.Data.Group_id)
+	if err != nil {
+		apiError(w, r, http.StatusInternalServerError, nil)
+		return
+	}
+
+	if err := json.NewEncoder(w).Encode(list); err != nil {
+		logger.NewLog("api - getNotesList()", 2, err, "Filed to encode r.Body", list)
+		apiError(w, r, http.StatusInternalServerError, nil)
+		return
+	}
+
+	logger.NewLog("api - getNotesList()", 5, nil,
+		"OUT - List geted "+time.Now().Format("02.01 15:04:05"), nil)
+}
+
+func (h *Handler) getNote(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		apiError(w, r, http.StatusMethodNotAllowed, errMethodNotAllowed)
+		return
+	}
+
+	data := struct {
+		Data struct {
+			Id int `json:"id"`
+		} `json:"data"`
+	}{}
+	if err := json.NewDecoder(r.Body).Decode(&data); err != nil {
+		logger.NewLog("api - getNote()", 2, err, "Filed to decode r.Body", nil)
+		apiError(w, r, http.StatusInternalServerError, nil)
+		return
+	}
+
+	note, err := h.NotesService.GetNote(data.Data.Id)
+	if err != nil {
+		apiError(w, r, http.StatusInternalServerError, nil)
+		return
+	}
+
+	if err := json.NewEncoder(w).Encode(note); err != nil {
+		logger.NewLog("api - getNote()", 2, err, "Filed to encode r.Body", note)
+		apiError(w, r, http.StatusInternalServerError, nil)
+		return
+	}
+
+	logger.NewLog("api - getNote()", 5, nil,
+		"OUT - Note geted "+time.Now().Format("02.01 15:04:05"), nil)
 }
