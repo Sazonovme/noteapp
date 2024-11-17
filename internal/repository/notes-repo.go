@@ -27,13 +27,13 @@ func (r *NotesRepository) AddGroup(login string, nameGroup string) error {
 	return err
 }
 
-func (r *NotesRepository) DelGroup(login string, nameGroup string) error {
-	_, err := r.db.Exec("DELETE FROM groups WHERE nameGroup = $1", nameGroup)
+func (r *NotesRepository) DelGroup(id int, login string) error {
+	_, err := r.db.Exec("DELETE FROM groups WHERE id = $1 AND user_login = $2", id)
 	return err
 }
 
-func (r *NotesRepository) UpdateGroup(login string, id int, newNameGroup string) error {
-	_, err := r.db.Exec("UPDATE groups SET nameGroup = $1 WHERE id = $2 AND user_login = $3", newNameGroup, id, login)
+func (r *NotesRepository) UpdateGroup(id int, login string, newNameGroup string) error {
+	_, err := r.db.Exec("UPDATE groups SET name = $1 WHERE id = $2 AND user_login", newNameGroup, id, login)
 	return err
 }
 
@@ -70,13 +70,13 @@ func (r *NotesRepository) AddNote(login string, title string, text string, group
 	return err
 }
 
-func (r *NotesRepository) DelNote(id int) error {
-	_, err := r.db.Exec("DELETE FROM notes WHERE id = $1", id)
+func (r *NotesRepository) DelNote(id int, login string) error {
+	_, err := r.db.Exec("DELETE FROM notes WHERE id = $1 AND login = $2", id, login)
 	return err
 }
 
-func (r *NotesRepository) UpdateNote(id int, title string, text string, group_id int) error {
-	_, err := r.db.Exec("UPDATE notes SET title = $1, text = $2, group_id = $3 WHERE id = $4", title, text, id, group_id)
+func (r *NotesRepository) UpdateNote(id int, login string, title string, text string, group_id int) error {
+	_, err := r.db.Exec("UPDATE notes SET title = $1, text = $2, group_id = $3 WHERE id = $4 AND user_login = $5", title, text, id, group_id, login)
 	return err
 }
 
@@ -119,13 +119,14 @@ func (r *NotesRepository) GetNotesList(login string, group_id int) ([]model.Note
 	return list, nil
 }
 
-func (r *NotesRepository) GetNote(id int) (model.Note, error) {
+func (r *NotesRepository) GetNote(id int, login string) (model.Note, error) {
 
 	var note model.Note
 
 	err := r.db.QueryRow(
-		"SELECT id, title, text, group_id FROM notes WHERE id = $1",
+		"SELECT id, title, text, group_id FROM notes WHERE id = $1 AND user_login = $2",
 		id,
+		login,
 	).Scan(&note)
 	if err != nil {
 		return note, err

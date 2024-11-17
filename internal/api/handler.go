@@ -27,15 +27,17 @@ type AuthService interface {
 }
 
 type NotesService interface {
+	// GROUPS
 	AddGroup(login string, nameGroup string) error
-	DelGroup(login string, nameGroup string) error
-	UpdateGroup(login string, id int, nameGroup string) error
+	DelGroup(id int, login string) error
+	UpdateGroup(id int, login string, newNameGroup string) error
 	GetGroupList(login string) ([]repository.Group, error)
+	// NOTES
 	AddNote(login string, title string, text string, group_id int) error
-	DelNote(id int) error
-	UpdateNote(id int, title string, text string, group_id int) error
+	DelNote(id int, login string) error
+	UpdateNote(id int, login string, title string, text string, group_id int) error
 	GetNotesList(login string, group_id int) ([]model.Note, error)
-	GetNote(id int) (model.Note, error)
+	GetNote(id int, login string) (model.Note, error)
 }
 
 type Handler struct {
@@ -283,14 +285,16 @@ func (h *Handler) addGroup(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var group model.Group
-	if err := json.NewDecoder(r.Body).Decode(&group); err != nil {
+	data := struct {
+		Group model.Group `json:"data"`
+	}{}
+	if err := json.NewDecoder(r.Body).Decode(&data); err != nil {
 		logger.NewLog("api - addGroup()", 2, err, "Filed to decode r.Body", nil)
 		apiError(w, r, http.StatusInternalServerError, nil)
 		return
 	}
 
-	err := h.NotesService.AddGroup(group.User_login, group.Name)
+	err := h.NotesService.AddGroup(data.Group.User_login, data.Group.Name)
 	if err != nil {
 		apiError(w, r, http.StatusInternalServerError, nil)
 		return
@@ -307,14 +311,16 @@ func (h *Handler) delGroup(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var group model.Group
-	if err := json.NewDecoder(r.Body).Decode(&group); err != nil {
+	data := struct {
+		Group model.Group `json:"data"`
+	}{}
+	if err := json.NewDecoder(r.Body).Decode(&data); err != nil {
 		logger.NewLog("api - delGroup()", 2, err, "Filed to decode r.Body", nil)
 		apiError(w, r, http.StatusInternalServerError, nil)
 		return
 	}
 
-	err := h.NotesService.DelGroup(group.User_login, group.Name)
+	err := h.NotesService.DelGroup(data.Group.Id, data.Group.User_login)
 	if err != nil {
 		apiError(w, r, http.StatusInternalServerError, nil)
 		return
@@ -330,14 +336,16 @@ func (h *Handler) updateGroup(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var group model.Group
-	if err := json.NewDecoder(r.Body).Decode(&group); err != nil {
+	data := struct {
+		Group model.Group `json:"data"`
+	}{}
+	if err := json.NewDecoder(r.Body).Decode(&data); err != nil {
 		logger.NewLog("api - updateGroup()", 2, err, "Filed to decode r.Body", nil)
 		apiError(w, r, http.StatusInternalServerError, nil)
 		return
 	}
 
-	err := h.NotesService.UpdateGroup(group.User_login, group.Id, group.Name)
+	err := h.NotesService.UpdateGroup(data.Group.Id, data.Group.User_login, data.Group.Name)
 	if err != nil {
 		apiError(w, r, http.StatusInternalServerError, nil)
 		return
@@ -353,14 +361,16 @@ func (h *Handler) getGroupList(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var group model.Group
-	if err := json.NewDecoder(r.Body).Decode(&group); err != nil {
+	data := struct {
+		Group model.Group `json:"data"`
+	}{}
+	if err := json.NewDecoder(r.Body).Decode(&data); err != nil {
 		logger.NewLog("api - getGroupList()", 2, err, "Filed to decode r.Body", nil)
 		apiError(w, r, http.StatusInternalServerError, nil)
 		return
 	}
 
-	gList, err := h.NotesService.GetGroupList(group.User_login)
+	gList, err := h.NotesService.GetGroupList(data.Group.User_login)
 	if err != nil {
 		apiError(w, r, http.StatusInternalServerError, nil)
 		return
@@ -384,14 +394,16 @@ func (h *Handler) addNote(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var note model.Note
-	if err := json.NewDecoder(r.Body).Decode(&note); err != nil {
+	data := struct {
+		Note model.Note `json:"data"`
+	}{}
+	if err := json.NewDecoder(r.Body).Decode(&data); err != nil {
 		logger.NewLog("api - addNote()", 2, err, "Filed to decode r.Body", nil)
 		apiError(w, r, http.StatusInternalServerError, nil)
 		return
 	}
 
-	err := h.NotesService.AddNote(note.User_login, note.Title, note.Text, note.Group_id)
+	err := h.NotesService.AddNote(data.Note.User_login, data.Note.Title, data.Note.Text, data.Note.Group_id)
 	if err != nil {
 		apiError(w, r, http.StatusInternalServerError, nil)
 		return
@@ -408,14 +420,19 @@ func (h *Handler) delNote(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var id int
-	if err := json.NewDecoder(r.Body).Decode(&id); err != nil {
+	data := struct {
+		Data struct {
+			Id    int    `json:"id"`
+			Login string `json:"user_login"`
+		} `json:"data"`
+	}{}
+	if err := json.NewDecoder(r.Body).Decode(&data); err != nil {
 		logger.NewLog("api - delNote()", 2, err, "Filed to decode r.Body", nil)
 		apiError(w, r, http.StatusInternalServerError, nil)
 		return
 	}
 
-	err := h.NotesService.DelNote(id)
+	err := h.NotesService.DelNote(data.Data.Id, data.Data.Login)
 	if err != nil {
 		apiError(w, r, http.StatusInternalServerError, nil)
 		return
@@ -431,14 +448,16 @@ func (h *Handler) updateNote(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var note model.Note
-	if err := json.NewDecoder(r.Body).Decode(&note); err != nil {
+	data := struct {
+		Note model.Note `json:"data"`
+	}{}
+	if err := json.NewDecoder(r.Body).Decode(&data); err != nil {
 		logger.NewLog("api - updateNote()", 2, err, "Filed to decode r.Body", nil)
 		apiError(w, r, http.StatusInternalServerError, nil)
 		return
 	}
 
-	err := h.NotesService.UpdateNote(note.Id, note.Title, note.Text, note.Group_id)
+	err := h.NotesService.UpdateNote(data.Note.Id, data.Note.User_login, data.Note.Title, data.Note.Text, data.Note.Group_id)
 	if err != nil {
 		apiError(w, r, http.StatusInternalServerError, nil)
 		return
@@ -456,7 +475,7 @@ func (h *Handler) getNotesList(w http.ResponseWriter, r *http.Request) {
 
 	data := struct {
 		Data struct {
-			Login    string `json:"login"`
+			Login    string `json:"user_login"`
 			Group_id int    `json:"group_id"`
 		} `json:"data"`
 	}{}
@@ -490,7 +509,8 @@ func (h *Handler) getNote(w http.ResponseWriter, r *http.Request) {
 
 	data := struct {
 		Data struct {
-			Id int `json:"id"`
+			Id    int    `json:"id"`
+			Login string `json:"user_login"`
 		} `json:"data"`
 	}{}
 	if err := json.NewDecoder(r.Body).Decode(&data); err != nil {
@@ -499,7 +519,7 @@ func (h *Handler) getNote(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	note, err := h.NotesService.GetNote(data.Data.Id)
+	note, err := h.NotesService.GetNote(data.Data.Id, data.Data.Login)
 	if err != nil {
 		apiError(w, r, http.StatusInternalServerError, nil)
 		return
