@@ -31,7 +31,7 @@ type NotesService interface {
 	AddGroup(login string, nameGroup string) error
 	DelGroup(id int, login string) error
 	UpdateGroup(id int, login string, newNameGroup string) error
-	GetGroupList(login string) ([]repository.Group, error)
+	GetGroupList(login string) ([]model.Group, error)
 	// NOTES
 	AddNote(login string, title string, text string, group_id int) error
 	DelNote(id int, login string) error

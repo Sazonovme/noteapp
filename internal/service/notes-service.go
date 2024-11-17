@@ -2,7 +2,6 @@ package service
 
 import (
 	"noteapp/internal/model"
-	"noteapp/internal/repository"
 	"noteapp/pkg/logger"
 	"strconv"
 )
@@ -12,7 +11,7 @@ type NotesRepository interface {
 	AddGroup(login string, nameGroup string) error
 	DelGroup(id int, login string) error
 	UpdateGroup(id int, login string, newNameGroup string) error
-	GetGroupList(login string) ([]repository.Group, error)
+	GetGroupList(login string) ([]model.Group, error)
 	// NOTES
 	AddNote(login string, title string, text string, group_id int) error
 	DelNote(id int, login string) error
@@ -57,7 +56,7 @@ func (s *NotesService) UpdateGroup(id int, login string, newNameGroup string) er
 	return err
 }
 
-func (s *NotesService) GetGroupList(login string) ([]repository.Group, error) {
+func (s *NotesService) GetGroupList(login string) ([]model.Group, error) {
 	groupList, err := s.repository.GetGroupList(login)
 	if err != nil {
 		logger.NewLog("service - GetGroupList()", 2, err, "Filed to get group list in repository", nil)

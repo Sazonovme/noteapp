@@ -5,11 +5,6 @@ import (
 	"noteapp/internal/model"
 )
 
-type Group struct {
-	Id   int    `json:"id"`
-	Name string `json:"name"`
-}
-
 type NotesRepository struct {
 	db *sql.DB
 }
@@ -37,8 +32,8 @@ func (r *NotesRepository) UpdateGroup(id int, login string, newNameGroup string)
 	return err
 }
 
-func (r *NotesRepository) GetGroupList(login string) ([]Group, error) {
-	var list []Group
+func (r *NotesRepository) GetGroupList(login string) ([]model.Group, error) {
+	var list []model.Group
 
 	res, err := r.db.Query("SELECT id, name FROM groups WHERE login = $1", login)
 	if err != nil {
@@ -50,7 +45,7 @@ func (r *NotesRepository) GetGroupList(login string) ([]Group, error) {
 	defer res.Close()
 
 	for res.Next() {
-		var listElem Group
+		var listElem model.Group
 		if err := res.Scan(&listElem.Id, &listElem.Name); err != nil {
 			return list, err
 		}
