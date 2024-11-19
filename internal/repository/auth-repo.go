@@ -24,7 +24,7 @@ func NewAuthRepository(db *sql.DB) *AuthRepository {
 }
 
 func (r *AuthRepository) DeleteRefreshSession(login string, fingerprint string) error {
-	_, err := r.db.Exec("DELETE FROM refreshSessions WHERE login = $1 AND fingerprint = $2", login, fingerprint)
+	_, err := r.db.Exec("DELETE FROM refreshSessions WHERE user_login = $1 AND fingerprint = $2", login, fingerprint)
 	return err
 }
 
