@@ -18,7 +18,7 @@ type UserService interface {
 
 type AuthService interface {
 	MakeRefreshSession(string, string) (*service.RequestTokenData, error)
-	UpdateTokens(oldRefreshToken string, fingerprint string, login string) (*service.RequestTokenData, error)
+	UpdateTokens(oldRefreshToken string, fingerprint string) (*service.RequestTokenData, error)
 }
 
 type NotesService interface {
@@ -257,14 +257,7 @@ func (h *Handler) refreshToken(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	login, ok := r.Context().Value(ctxUserLogin).(string)
-	if !ok {
-		logger.NewLog("api - refreshToken()", 2, nil, "Field login not exist in r.Context()", nil)
-		apiError(w, r, http.StatusInternalServerError, nil)
-		return
-	}
-
-	refSession, err := h.AuthService.UpdateTokens(reqData.Data.RefreshToken, reqData.Data.Fingerprint, login)
+	refSession, err := h.AuthService.UpdateTokens(reqData.Data.RefreshToken, reqData.Data.Fingerprint)
 	if err != nil {
 		apiError(w, r, http.StatusInternalServerError, nil)
 		return

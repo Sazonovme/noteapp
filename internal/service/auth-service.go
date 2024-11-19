@@ -77,8 +77,8 @@ func (s *AuthService) MakeRefreshSession(login string, fingerprint string) (*Req
 	}, nil
 }
 
-func (s *AuthService) UpdateTokens(oldRefreshToken string, fingerprint string, login string) (*RequestTokenData, error) {
-	_, err := VerifyToken(oldRefreshToken, secretKeyRefresh)
+func (s *AuthService) UpdateTokens(oldRefreshToken string, fingerprint string) (*RequestTokenData, error) {
+	login, err := VerifyToken(oldRefreshToken, secretKeyRefresh)
 	if err != nil {
 		logger.NewLog("service - UpdateTokens()", 5, err, "Filed to verify token", nil)
 		return nil, err
