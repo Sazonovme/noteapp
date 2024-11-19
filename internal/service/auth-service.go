@@ -114,22 +114,33 @@ func CreateJWTToken(login string, exp time.Time, secretKey string) (string, erro
 	return tokenString, nil
 }
 
-func VerifyToken(tokenString string, secretKey string) (bool, error) {
-	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
+func VerifyToken(tokenString string, secretKey string) (string, error) {
+	// token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
+	// 	return []byte(secretKey), nil
+	// })
+	claims := jwt.MapClaims{}
+	token, err := jwt.ParseWithClaims(tokenString, claims, func(token *jwt.Token) (interface{}, error) {
 		return []byte(secretKey), nil
 	})
+
 	if err != nil {
 		logger.NewLog("service - VerifyToken()", 2, err, "Filed to parse JWT token", nil)
-		return false, err
+		return "", err
 	}
 
 	if !token.Valid {
-		return false, errTokenInvalid
+		return "", errTokenInvalid
 	}
 
-	return true, nil
+	login, ok := claims["sub"].(string)
+	if !ok {
+		logger.NewLog("service - VerifyToken()", 2, err, "Field sub(login) not exist in token", nil)
+		return "", errTokenInvalid
+	}
+
+	return login, nil
 }
 
-func VerifyAccessToken(tokenString string) (bool, error) {
+func VerifyAccessToken(tokenString string) (string, error) {
 	return VerifyToken(tokenString, secretKeyAccess)
 }

@@ -11,11 +11,6 @@ import (
 	"time"
 )
 
-var (
-	errMethodNotAllowed = errors.New("method not allowed")
-	errWrongPassword    = errors.New("wrong login or password")
-)
-
 type UserService interface {
 	CreateUser(*model.User) error
 	FindByLogin(string) (*model.User, error)
@@ -45,6 +40,15 @@ type Handler struct {
 	AuthService  AuthService
 	NotesService NotesService
 }
+
+type ctxKey string
+
+var (
+	errMethodNotAllowed = errors.New("method not allowed")
+	errWrongPassword    = errors.New("wrong login or password")
+)
+
+var ctxUserLogin ctxKey = "login"
 
 func NewHandler(userService UserService, authService AuthService, notesService NotesService) *Handler {
 	return &Handler{
@@ -245,7 +249,6 @@ func (h *Handler) refreshToken(w http.ResponseWriter, r *http.Request) {
 		Data struct {
 			RefreshToken string `json:"refreshToken"`
 			Fingerprint  string `json:"fingerprint"`
-			Login        string `json:"login"`
 		} `json:"data"`
 	}{}
 	err := json.NewDecoder(r.Body).Decode(reqData)
@@ -254,7 +257,14 @@ func (h *Handler) refreshToken(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	refSession, err := h.AuthService.UpdateTokens(reqData.Data.RefreshToken, reqData.Data.Fingerprint, reqData.Data.Login)
+	login, ok := r.Context().Value(ctxUserLogin).(string)
+	if !ok {
+		logger.NewLog("api - refreshToken()", 2, nil, "Field login not exist in r.Context()", nil)
+		apiError(w, r, http.StatusInternalServerError, nil)
+		return
+	}
+
+	refSession, err := h.AuthService.UpdateTokens(reqData.Data.RefreshToken, reqData.Data.Fingerprint, login)
 	if err != nil {
 		apiError(w, r, http.StatusInternalServerError, nil)
 		return
@@ -294,7 +304,14 @@ func (h *Handler) addGroup(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err := h.NotesService.AddGroup(data.Group.User_login, data.Group.Name)
+	login, ok := r.Context().Value(ctxUserLogin).(string)
+	if !ok {
+		logger.NewLog("api - addGroup()", 2, nil, "Field login not exist in r.Context()", nil)
+		apiError(w, r, http.StatusInternalServerError, nil)
+		return
+	}
+
+	err := h.NotesService.AddGroup(login, data.Group.Name)
 	if err != nil {
 		apiError(w, r, http.StatusInternalServerError, nil)
 		return
@@ -320,7 +337,14 @@ func (h *Handler) delGroup(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err := h.NotesService.DelGroup(data.Group.Id, data.Group.User_login)
+	login, ok := r.Context().Value(ctxUserLogin).(string)
+	if !ok {
+		logger.NewLog("api - delGroup()", 2, nil, "Field login not exist in r.Context()", nil)
+		apiError(w, r, http.StatusInternalServerError, nil)
+		return
+	}
+
+	err := h.NotesService.DelGroup(data.Group.Id, login)
 	if err != nil {
 		apiError(w, r, http.StatusInternalServerError, nil)
 		return
@@ -345,7 +369,14 @@ func (h *Handler) updateGroup(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err := h.NotesService.UpdateGroup(data.Group.Id, data.Group.User_login, data.Group.Name)
+	login, ok := r.Context().Value(ctxUserLogin).(string)
+	if !ok {
+		logger.NewLog("api - updateGroup()", 2, nil, "Field login not exist in r.Context()", nil)
+		apiError(w, r, http.StatusInternalServerError, nil)
+		return
+	}
+
+	err := h.NotesService.UpdateGroup(data.Group.Id, login, data.Group.Name)
 	if err != nil {
 		apiError(w, r, http.StatusInternalServerError, nil)
 		return
@@ -361,16 +392,23 @@ func (h *Handler) getGroupList(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	data := struct {
-		Group model.Group `json:"data"`
-	}{}
-	if err := json.NewDecoder(r.Body).Decode(&data); err != nil {
-		logger.NewLog("api - getGroupList()", 2, err, "Filed to decode r.Body", nil)
+	// data := struct {
+	// 	Group model.Group `json:"data"`
+	// }{}
+	// if err := json.NewDecoder(r.Body).Decode(&data); err != nil {
+	// 	logger.NewLog("api - getGroupList()", 2, err, "Filed to decode r.Body", nil)
+	// 	apiError(w, r, http.StatusInternalServerError, nil)
+	// 	return
+	// }
+
+	login, ok := r.Context().Value(ctxUserLogin).(string)
+	if !ok {
+		logger.NewLog("api - getGroupList()", 2, nil, "Field login not exist in r.Context()", nil)
 		apiError(w, r, http.StatusInternalServerError, nil)
 		return
 	}
 
-	gList, err := h.NotesService.GetGroupList(data.Group.User_login)
+	gList, err := h.NotesService.GetGroupList(login)
 	if err != nil {
 		apiError(w, r, http.StatusInternalServerError, nil)
 		return
@@ -403,7 +441,14 @@ func (h *Handler) addNote(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err := h.NotesService.AddNote(data.Note.User_login, data.Note.Title, data.Note.Text, data.Note.Group_id)
+	login, ok := r.Context().Value(ctxUserLogin).(string)
+	if !ok {
+		logger.NewLog("api - addNote()", 2, nil, "Field login not exist in r.Context()", nil)
+		apiError(w, r, http.StatusInternalServerError, nil)
+		return
+	}
+
+	err := h.NotesService.AddNote(login, data.Note.Title, data.Note.Text, data.Note.Group_id)
 	if err != nil {
 		apiError(w, r, http.StatusInternalServerError, nil)
 		return
@@ -422,8 +467,7 @@ func (h *Handler) delNote(w http.ResponseWriter, r *http.Request) {
 
 	data := struct {
 		Data struct {
-			Id    int    `json:"id"`
-			Login string `json:"user_login"`
+			Id int `json:"id"`
 		} `json:"data"`
 	}{}
 	if err := json.NewDecoder(r.Body).Decode(&data); err != nil {
@@ -432,7 +476,14 @@ func (h *Handler) delNote(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err := h.NotesService.DelNote(data.Data.Id, data.Data.Login)
+	login, ok := r.Context().Value(ctxUserLogin).(string)
+	if !ok {
+		logger.NewLog("api - delNote()", 2, nil, "Field login not exist in r.Context()", nil)
+		apiError(w, r, http.StatusInternalServerError, nil)
+		return
+	}
+
+	err := h.NotesService.DelNote(data.Data.Id, login)
 	if err != nil {
 		apiError(w, r, http.StatusInternalServerError, nil)
 		return
@@ -457,7 +508,14 @@ func (h *Handler) updateNote(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err := h.NotesService.UpdateNote(data.Note.Id, data.Note.User_login, data.Note.Title, data.Note.Text, data.Note.Group_id)
+	login, ok := r.Context().Value(ctxUserLogin).(string)
+	if !ok {
+		logger.NewLog("api - updateNote()", 2, nil, "Field login not exist in r.Context()", nil)
+		apiError(w, r, http.StatusInternalServerError, nil)
+		return
+	}
+
+	err := h.NotesService.UpdateNote(data.Note.Id, login, data.Note.Title, data.Note.Text, data.Note.Group_id)
 	if err != nil {
 		apiError(w, r, http.StatusInternalServerError, nil)
 		return
@@ -475,8 +533,7 @@ func (h *Handler) getNotesList(w http.ResponseWriter, r *http.Request) {
 
 	data := struct {
 		Data struct {
-			Login    string `json:"user_login"`
-			Group_id int    `json:"group_id"`
+			Group_id int `json:"group_id"`
 		} `json:"data"`
 	}{}
 	if err := json.NewDecoder(r.Body).Decode(&data); err != nil {
@@ -485,7 +542,14 @@ func (h *Handler) getNotesList(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	list, err := h.NotesService.GetNotesList(data.Data.Login, data.Data.Group_id)
+	login, ok := r.Context().Value(ctxUserLogin).(string)
+	if !ok {
+		logger.NewLog("api - getNotesList()", 2, nil, "Field login not exist in r.Context()", nil)
+		apiError(w, r, http.StatusInternalServerError, nil)
+		return
+	}
+
+	list, err := h.NotesService.GetNotesList(login, data.Data.Group_id)
 	if err != nil {
 		apiError(w, r, http.StatusInternalServerError, nil)
 		return
@@ -509,8 +573,7 @@ func (h *Handler) getNote(w http.ResponseWriter, r *http.Request) {
 
 	data := struct {
 		Data struct {
-			Id    int    `json:"id"`
-			Login string `json:"user_login"`
+			Id int `json:"id"`
 		} `json:"data"`
 	}{}
 	if err := json.NewDecoder(r.Body).Decode(&data); err != nil {
@@ -519,7 +582,14 @@ func (h *Handler) getNote(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	note, err := h.NotesService.GetNote(data.Data.Id, data.Data.Login)
+	login, ok := r.Context().Value(ctxUserLogin).(string)
+	if !ok {
+		logger.NewLog("api - getNote()", 2, nil, "Field login not exist in r.Context()", nil)
+		apiError(w, r, http.StatusInternalServerError, nil)
+		return
+	}
+
+	note, err := h.NotesService.GetNote(data.Data.Id, login)
 	if err != nil {
 		apiError(w, r, http.StatusInternalServerError, nil)
 		return

@@ -1,6 +1,7 @@
 package api
 
 import (
+	"context"
 	"encoding/json"
 	"net/http"
 	"noteapp/internal/service"
@@ -47,14 +48,16 @@ func middlewareAuth() Middleware {
 				return
 			}
 
-			_, err = service.VerifyAccessToken(d.Data.AccessToken)
+			login, err := service.VerifyAccessToken(d.Data.AccessToken)
 			if err != nil {
 				http.Redirect(w, r, "/sign-in", http.StatusUnauthorized)
 				//apiError(w, r, http.StatusInternalServerError, nil)
 				return
 			}
 
-			f(w, r)
+			ctx := context.WithValue(r.Context(), ctxUserLogin, login)
+
+			f(w, r.WithContext(ctx))
 		}
 	}
 }
