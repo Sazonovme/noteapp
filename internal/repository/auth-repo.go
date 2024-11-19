@@ -29,7 +29,7 @@ func (r *AuthRepository) DeleteRefreshSession(login string, fingerprint string) 
 }
 
 func (r *AuthRepository) WriteRefreshSession(s *RefreshSession) error {
-	_, err := r.db.Exec("INSERT INTO refreshSessions VALUES($1, $2, $3, $4, $5)", s.Login, s.RefreshToken, s.Exp, s.Iat, s.Fingerprint)
+	_, err := r.db.Exec("INSERT INTO refreshSessions(user_login, fingerprint, refreshtoken, exp, iat) VALUES($1, $2, $3, $4, $5)", s.Login, s.Fingerprint, s.RefreshToken, s.Exp, s.Iat)
 	return err
 }
 
