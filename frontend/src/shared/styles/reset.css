@@ -1,0 +1,269 @@
+html,
+body,
+div,
+span,
+applet,
+object,
+iframe,
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+p,
+blockquote,
+pre,
+a,
+abbr,
+acronym,
+address,
+big,
+cite,
+code,
+del,
+dfn,
+em,
+img,
+ins,
+kbd,
+q,
+s,
+samp,
+small,
+strike,
+strong,
+sub,
+sup,
+tt,
+var,
+b,
+u,
+i,
+center,
+dl,
+dt,
+dd,
+ol,
+ul,
+li,
+fieldset,
+form,
+label,
+legend,
+table,
+caption,
+tbody,
+tfoot,
+thead,
+tr,
+th,
+td,
+article,
+aside,
+canvas,
+details,
+embed,
+figure,
+figcaption,
+hgroup,
+menu,
+output,
+ruby,
+section,
+summary,
+time,
+mark,
+audio,
+video,
+footer,
+header,
+nav {
+    padding: 0;
+    margin: 0;
+
+    border: 0;
+
+    vertical-align: baseline;
+}
+
+/* HTML5 display-role reset for older browsers */
+
+article,
+aside,
+details,
+figcaption,
+figure,
+footer,
+header,
+hgroup,
+menu,
+nav,
+section {
+    display: block;
+}
+
+body {
+    line-height: 1;
+
+    color: var(--w-text-main);
+    background-color: var(--w-background-main);
+
+    text-rendering: optimizelegibility;
+}
+
+ol,
+ul {
+    list-style: none;
+}
+
+blockquote,
+q {
+    quotes: none;
+}
+
+blockquote:before,
+blockquote:after,
+q:before,
+q:after {
+    content: none;
+}
+
+table {
+    border-collapse: collapse;
+    border-spacing: 0;
+}
+
+/*! -------------- C U S T O M ----------------- */
+
+*::-webkit-scrollbar {
+    height: 17px;
+}
+
+*::-webkit-scrollbar-thumb {
+    border: 6px solid var(--dynamic-bg-color);
+    border-radius: 27px;
+    background: var(--dynamic-bg-color);
+}
+
+*::-webkit-scrollbar-track {
+    background: var(--dynamic-bg-color);
+}
+
+*:hover::-webkit-scrollbar-thumb {
+    background: var(--dynamic-gray-info);
+}
+
+#root {
+    display: flex;
+
+    flex-direction: column;
+    min-height: 100vh;
+    overflow: hidden;
+    /*view-transition-name: name;*/
+}
+
+body:after {
+    position: absolute;
+    z-index: -1;
+
+    height: 0;
+    width: 0;
+
+    content: url('../../../public/icons/wifi.svg');
+    overflow: hidden;
+}
+
+::view-transition-image-pair(root) {
+    isolation: auto;
+}
+
+::view-transition-old(root),
+::view-transition-new(root) {
+    display: block;
+    animation: none;
+    mix-blend-mode: normal;
+}
+
+/* Это альтернативный вариант без JS*/
+/*html {
+    view-transition-name: html;
+}
+
+::view-transition-old(name) {
+    animation: .5s name-out linear;
+}
+
+::view-transition-new(name) {
+    animation: .5s name-enter linear;
+}
+
+@keyframes name-out {
+    0% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 1;
+    }
+    100% {
+        opacity: 0;
+    }
+}
+
+@keyframes name-enter {
+    0% {
+        opacity: 0;
+    }
+    50% {
+        opacity: 0;
+    }
+    100% {
+        opacity: 1;
+    }
+}
+
+!*-------------------------*!
+
+::view-transition-old(html) {
+    animation: .5s html-out linear;
+}
+
+::view-transition-new(html) {
+    animation: .5s html-enter  linear;
+}
+
+@keyframes html-out {
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes html-enter {
+    0% {
+        height: 0;
+        inset: 0;
+        margin: auto;
+        max-height: 0;
+        max-width: 5px;
+        position: absolute;
+        width: 5px;
+    }
+    45% {
+        height: 100vh;
+        inset: 0;
+        margin: auto;
+        max-height: 100vh;
+        max-width: 5px;
+        position: absolute;
+        width: 5px;
+    }
+    100% {
+        height: 100vh;
+        inset: 0;
+        margin: auto;
+        max-height: 100vh;
+        max-width: 100vw;
+        position: absolute;
+        width: 100vw;
+    }
+}*/

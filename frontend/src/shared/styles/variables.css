@@ -1,0 +1,63 @@
+:root {
+    --w-indent-3xs: 4px;
+    --w-indent-xxs: 8px;
+    --w-indent-xs: 12px;
+    --w-indent-sm: 16px;
+    --w-indent-md: 20px;
+    --w-indent-lg: 24px;
+    --w-indent-xl: 28px;
+    --w-indent-xxl: 32px;
+    --w-indent-xxxl: 36px;
+    --w-indent-4xl: 40px;
+
+    --w-border-size-sm: 1px;
+    --w-border-size-md: 2px;
+    --w-border-size-lg: 3px;
+
+    --w-border-solid-sm: var(--w-border-size-sm) solid var(--w-graphite-9);
+    --w-border-solid-md: var(--w-border-size-md) solid var(--w-graphite-9);
+    --w-border-solid-lg: var(--w-border-size-lg) solid var(--w-graphite-9);
+
+    --w-border-radius-xs: 4px;
+    --w-border-radius-sm: 8px;
+    --w-border-radius-md: 12px;
+    --w-border-radius-lg: 16px;
+
+    --w-shadow-size-zero: 0 0 0;
+    --w-shadow-size-xxs: 0 1px 2px;
+    --w-shadow-size-xs: 0 2px 4px;
+    --w-shadow-size-sm: 0 3px 6px;
+    --w-shadow-size-md: 0 4px 8px;
+    --w-shadow-size-lg: 0 8px 16px;
+    --w-shadow-size-xl: 0 12px 24px;
+    --w-shadow-size-xxl: 0 18px 24px;
+
+    --w-shadow-xxs: var(--w-shadow-size-xxs) var(--w-shadow-first-color), var(--w-shadow-size-xs) var(--w-shadow-second-color);
+    --w-shadow-xs: var(--w-shadow-size-xxs) var(--w-shadow-first-color), var(--w-shadow-size-sm) var(--w-shadow-second-color);
+    --w-shadow-sm: var(--w-shadow-size-xxs) var(--w-shadow-first-color), var(--w-shadow-size-md) var(--w-shadow-second-color);
+    --w-shadow-md: var(--w-shadow-size-xxs) var(--w-shadow-first-color), var(--w-shadow-size-lg) var(--w-shadow-second-color);
+    --w-shadow-lg: var(--w-shadow-size-xxs) var(--w-shadow-first-color), var(--w-shadow-size-xl) var(--w-shadow-second-color);
+    --w-shadow-xl: var(--w-shadow-size-xxs) var(--w-shadow-first-color), var(--w-shadow-size-xxl) var(--w-shadow-second-color);
+
+    --w-font-family-primary: 'Bookman Old Style', sans-serif;
+
+    --w-font-size-xxs: 13px;
+    --w-font-size-xs: 15px;
+    --w-font-size-sm: 16px;
+    --w-font-size-md: 19px;
+    --w-font-size-lg: 22px;
+    --w-font-size-xl: 28px;
+    --w-font-size-xxl: 34px;
+
+    --w-font-line-height-md: 130%;
+
+    --w-font-weight-regular: 400;
+    --w-font-weight-semibold: 600;
+    --w-font-weight-bold: 700;
+
+    --w-font: var(--w-font-weight-regular) var(--w-font-size-xs)/var(--w-font-line-height-md) var(--w-font-family-primary);
+}
+
+/* @media screen and (max-width: 650px) {
+    :root {}
+} */

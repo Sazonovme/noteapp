@@ -1,0 +1,56 @@
+module.exports = {
+    rules: {
+        'arrow-body-style': ['error', 'as-needed'],
+        'arrow-parens': ['error', 'as-needed'],
+        'arrow-spacing': ['error', { before: true, after: true }],
+        'constructor-super': 'off',
+        'generator-star-spacing': ['error', { before: false, after: true }],
+        'no-class-assign': 'error',
+        'no-confusing-arrow': 'off',
+        'no-const-assign': 'error',
+        'no-dupe-class-members': 'error',
+        'no-duplicate-imports': 'off', // is import/error
+        'no-new-symbol': 'error',
+        'no-restricted-exports': 'off',
+        'no-restricted-imports': 'off',
+        'no-this-before-super': 'error',
+        'no-useless-computed-key': 'error',
+        'no-useless-constructor': 'error',
+        'no-useless-rename': [
+            'error',
+            {
+                ignoreDestructuring: false,
+                ignoreImport: false,
+                ignoreExport: false,
+            },
+        ],
+        'no-var': 'error',
+        'object-shorthand': [
+            'error',
+            'always',
+            {
+                ignoreConstructors: false,
+                avoidQuotes: true,
+            },
+        ],
+        'prefer-arrow-callback': 'off',
+        'prefer-const': [
+            'error',
+            {
+                destructuring: 'any',
+                ignoreReadBeforeAssign: true,
+            },
+        ],
+        'prefer-destructuring': 'off',
+        'prefer-numeric-literals': 'off',
+        'prefer-rest-params': 'off',
+        'prefer-spread': 'error',
+        'prefer-template': 'error',
+        'require-yield': 'error',
+        'rest-spread-spacing': ['error', 'never'],
+        'sort-imports': 'off',
+        'symbol-description': 'off',
+        'template-curly-spacing': 'error',
+        'yield-star-spacing': 'off',
+    },
+};
