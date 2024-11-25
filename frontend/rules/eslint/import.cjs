@@ -30,12 +30,12 @@ module.exports = {
         'import/no-mutable-exports': 'error',
         'import/no-commonjs': 'off',
         'import/no-amd': 'error',
-// TODO: enable?
+        // TODO: enable?
         'import/no-nodejs-modules': 'off',
         'import/first': ['warn', 'absolute-first'],
         'import/imports-first': 'off',
         'import/no-duplicates': ['error', { 'prefer-inline': true }],
-// TODO: enable?
+        // TODO: enable?
         'import/no-namespace': 'off',
         'import/extensions': ['off', 'always', {
             js: 'never',

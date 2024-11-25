@@ -18,6 +18,7 @@
     "@typescript-eslint/eslint-plugin": "^6.7.4",
     "@typescript-eslint/parser": "^6.7.4",
     "@vitejs/plugin-vue": "^5.1.4",
+    "@vue/eslint-config-typescript": "^13.0.0",
     "eslint": "^8.50.0",
     "eslint-plugin-import": "^2.29.1",
     "eslint-plugin-security": "^1.7.1",
@@ -25,8 +26,9 @@
     "stylelint": "^15.10.3",
     "stylelint-declaration-block-no-ignored-properties": "^2.7.0",
     "stylelint-order": "^6.0.3",
-    "typescript": "~5.6.2",
+    "typescript": "^5.3.9",
     "vite": "^5.4.10",
+    "vue-eslint-parser": "^9.4.3",
     "vue-tsc": "^2.1.8"
   }
 }

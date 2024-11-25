@@ -22,9 +22,9 @@
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true,
     "noUncheckedSideEffectImports": true,
-    "baseUrl": "./",
+    "baseUrl": "./frontend",
     "paths": {
-      "app/*": ["./src/0_app/*"],
+      "app/*": ["src/0_app/*"],
       "pages/*": ["./src/1_pages/*"],
       "widgets/*": ["./src/2_widgets/*"],
       "features/*": ["./src/3_features/*"],
@@ -37,6 +37,8 @@
     "./.eslintrc.cjs",
     "./rules/**/*",
     "./src/**/*",
+    "**/*.{vue}",
+    "**/*",
     "./vite.config.ts"
   ],
   "exclude": [

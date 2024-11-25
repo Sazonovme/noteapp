@@ -1,10 +1,16 @@
-<template>
-  <RouterView />
-</template>
-
 <script setup lang="ts">
-  import { RouterView } from 'vue-router'
+import { RouterView } from 'vue-router';
+
+const a = () => {
+    const v = 1;
+    console.log(v);
+};
+a();
 </script>
+
+<template>
+    <RouterView />
+</template>
 
 <style scoped>
 .logo {

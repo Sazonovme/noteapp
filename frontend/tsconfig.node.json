@@ -19,10 +19,10 @@
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true,
     "noUncheckedSideEffectImports": true,
-  "baseUrl": "./",
+    "baseUrl": "./",
     "paths": {
       "app/*": [
-        "./src/0_app/*"
+        "src/0_app/*"
       ],
       "pages/*": [
         "./src/1_pages/*"
@@ -48,7 +48,7 @@
     "./.eslintrc.cjs",
     "./rules/**/*",
     "./src/**/*",
-    "./src/0_app/**/*.vue",
+    "src/0_app/**/*.vue",
     "./vite.config.ts"
   ],
   "exclude": [
