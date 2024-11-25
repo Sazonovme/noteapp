@@ -1,0 +1,28 @@
+.container {
+    padding: var(--w-indent-xxxl);
+    margin: var(--w-indent-xxxl);
+
+    border-radius: var(--w-border-radius-lg);
+
+    background: var(--w-background-main-lite);
+    opacity: .8;
+}
+
+.background {
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    transform: rotate(45deg);
+    z-index: -1;
+
+    height: 200%;
+    width: 200%;
+
+    background: url('icons/background-auth.svg') repeat;
+    opacity: 0.6;
+
+    pointer-events: none;
+
+    -webkit-background-size: 349px 204px;
+    background-size: 349px 204px;
+}

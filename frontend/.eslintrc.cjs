@@ -1,7 +1,10 @@
-const path = require('path');
+// todo строку ниже раскомитить
+// const path = require('path');
 
 module.exports = {
     env: {
+        // document: true,
+        // window: true,
         browser: true,
         node: true,
         amd: true,
@@ -12,6 +15,7 @@ module.exports = {
     parser: 'vue-eslint-parser',
     parserOptions: {
         parser: '@typescript-eslint/parser',
+        // todo если раскомитить не читает .vue файлы - починить
         // tsconfigRootDir: __dirname,
         // project: [
         //     path.resolve(__dirname, './tsconfig.app.json'),
@@ -20,11 +24,13 @@ module.exports = {
     },
     extends: [
         'eslint:recommended',
+        // todo строку ниже раскомитить
         // 'plugin:@typescript-eslint/recommended',
         'plugin:vue/vue3-recommended',
         './rules/eslint/index.cjs',
     ],
     plugins: [
+        // todo строку ниже раскомитить
         // '@typescript-eslint',
         // 'vue',
         'import',
@@ -69,7 +75,7 @@ module.exports = {
     //             'vue',
     //             'import',
     //         ],
-            
+
     //         rules: {
     //             // allow async-await
     //             'generator-star-spacing': 'off',

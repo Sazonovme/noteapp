@@ -1,1 +1,1 @@
-export { default as PageHome } from './page-home.vue'
+export { default as PageHome } from './page-home.vue';
