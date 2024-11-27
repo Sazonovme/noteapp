@@ -12,13 +12,12 @@ import (
 var (
 	secretKeyRefresh string = "super-secret-key-refresh"
 	secretKeyAccess  string = "super-secret-key-access"
-	errTokenInvalid         = errors.New("invalid token or token time has expired")
+	ErrTokenInvalid         = errors.New("invalid token or token time has expired")
 )
 
 type RequestTokenData struct {
 	AccessToken  string `json:"accessToken"`
 	RefreshToken string `json:"refreshToken"`
-	Exp          string `json:"exp"`
 }
 
 type AuthRepository interface {
@@ -73,7 +72,6 @@ func (s *AuthService) MakeRefreshSession(login string, fingerprint string) (*Req
 	return &RequestTokenData{
 		AccessToken:  aToken,
 		RefreshToken: rToken,
-		Exp:          expAccess.Format("2006-01-02 15:04"),
 	}, nil
 }
 
@@ -115,9 +113,6 @@ func CreateJWTToken(login string, exp time.Time, secretKey string) (string, erro
 }
 
 func VerifyToken(tokenString string, secretKey string) (string, error) {
-	// token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
-	// 	return []byte(secretKey), nil
-	// })
 	claims := jwt.MapClaims{}
 	token, err := jwt.ParseWithClaims(tokenString, claims, func(token *jwt.Token) (interface{}, error) {
 		return []byte(secretKey), nil
@@ -125,17 +120,20 @@ func VerifyToken(tokenString string, secretKey string) (string, error) {
 
 	if err != nil {
 		logger.NewLog("service - VerifyToken()", 2, err, "Filed to parse JWT token", nil)
+		if err.Error() == "Token is expired" {
+			return "", ErrTokenInvalid
+		}
 		return "", err
 	}
 
 	if !token.Valid {
-		return "", errTokenInvalid
+		return "", ErrTokenInvalid
 	}
 
 	login, ok := claims["sub"].(string)
 	if !ok {
 		logger.NewLog("service - VerifyToken()", 2, err, "Field sub(login) not exist in token", nil)
-		return "", errTokenInvalid
+		return "", ErrTokenInvalid
 	}
 
 	return login, nil

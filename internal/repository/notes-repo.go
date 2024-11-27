@@ -23,19 +23,19 @@ func (r *NotesRepository) AddGroup(login string, nameGroup string) error {
 }
 
 func (r *NotesRepository) DelGroup(id int, login string) error {
-	_, err := r.db.Exec("DELETE FROM groups WHERE id = $1 AND user_login = $2", id)
+	_, err := r.db.Exec("DELETE FROM groups WHERE id = $1 AND user_login = $2", id, login)
 	return err
 }
 
 func (r *NotesRepository) UpdateGroup(id int, login string, newNameGroup string) error {
-	_, err := r.db.Exec("UPDATE groups SET name = $1 WHERE id = $2 AND user_login", newNameGroup, id, login)
+	_, err := r.db.Exec("UPDATE groups SET name = $1 WHERE id = $2 AND user_login = $3", newNameGroup, id, login)
 	return err
 }
 
-func (r *NotesRepository) GetGroupList(login string) ([]model.Group, error) {
-	var list []model.Group
+func (r *NotesRepository) GetGroupList(login string) (model.GroupList, error) {
+	var list model.GroupList
 
-	res, err := r.db.Query("SELECT id, name FROM groups WHERE login = $1", login)
+	res, err := r.db.Query("SELECT id, name FROM groups WHERE user_login = $1", login)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return list, nil
@@ -45,11 +45,18 @@ func (r *NotesRepository) GetGroupList(login string) ([]model.Group, error) {
 	defer res.Close()
 
 	for res.Next() {
-		var listElem model.Group
-		if err := res.Scan(&listElem.Id, &listElem.Name); err != nil {
+		var id int
+		var name string
+		if err := res.Scan(&id, &name); err != nil {
 			return list, err
 		}
-		list = append(list, listElem)
+		list = append(list, struct {
+			Id   int    "json:\"id\""
+			Name string "json:\"name\""
+		}{
+			id,
+			name,
+		})
 	}
 
 	if err = res.Err(); err != nil {
@@ -61,24 +68,36 @@ func (r *NotesRepository) GetGroupList(login string) ([]model.Group, error) {
 // NOTES
 
 func (r *NotesRepository) AddNote(login string, title string, text string, group_id int) error {
-	_, err := r.db.Exec("INSERT INTO notes(user_login, title, text, group_id) VALUES ($1, $2, $3, $4)", login, title, text, group_id)
-	return err
+	if group_id == 0 {
+		_, err := r.db.Exec("INSERT INTO notes(user_login, title, text) VALUES ($1, $2, $3)", login, title, text)
+		return err
+	} else {
+		_, err := r.db.Exec(`INSERT INTO notes(user_login, title, text, group_id) 
+							VALUES ($1, $2, $3, (SELECT id as group_id FROM groups WHERE id = $4 AND user_login = $5))`,
+			login, title, text, group_id, login)
+		return err
+	}
 }
 
 func (r *NotesRepository) DelNote(id int, login string) error {
-	_, err := r.db.Exec("DELETE FROM notes WHERE id = $1 AND login = $2", id, login)
+	_, err := r.db.Exec("DELETE FROM notes WHERE id = $1 AND user_login = $2", id, login)
 	return err
 }
 
 func (r *NotesRepository) UpdateNote(id int, login string, title string, text string, group_id int) error {
-	_, err := r.db.Exec("UPDATE notes SET title = $1, text = $2, group_id = $3 WHERE id = $4 AND user_login = $5", title, text, id, group_id, login)
-	return err
+	if group_id == 0 {
+		_, err := r.db.Exec("UPDATE notes SET title = $1, text = $2 WHERE id = $3 AND user_login = $4", title, text, id, login)
+		return err
+	} else {
+		_, err := r.db.Exec("UPDATE notes SET title = $1, text = $2, group_id = $3 WHERE id = $4 AND user_login = $5", title, text, id, group_id, login)
+		return err
+	}
 }
 
-func (r *NotesRepository) GetNotesList(login string, group_id int) ([]model.Note, error) {
+func (r *NotesRepository) GetNotesList(login string, group_id int) (model.NoteList, error) {
 	var res *sql.Rows
 	var err error
-	var list []model.Note
+	var list model.NoteList
 
 	if group_id != 0 {
 		res, err = r.db.Query(
@@ -88,7 +107,7 @@ func (r *NotesRepository) GetNotesList(login string, group_id int) ([]model.Note
 		)
 	} else {
 		res, err = r.db.Query(
-			"SELECT id, title, group_id FROM notes WHERE user_login = $1",
+			"SELECT id, title, COALESCE(group_id,0) as group_id FROM notes WHERE user_login = $1",
 			login,
 		)
 	}
@@ -101,11 +120,21 @@ func (r *NotesRepository) GetNotesList(login string, group_id int) ([]model.Note
 	defer res.Close()
 
 	for res.Next() {
-		var listElem model.Note
-		if err := res.Scan(&listElem.Id, &listElem.Title, &listElem.Group_id); err != nil {
+		var id int
+		var title string
+		var group_id int
+		if err := res.Scan(&id, &title, &group_id); err != nil {
 			return list, err
 		}
-		list = append(list, listElem)
+		list = append(list, struct {
+			Id       int    `json:"id"`
+			Title    string `json:"title"`
+			Group_id int    `json:"group_id"`
+		}{
+			id,
+			title,
+			group_id,
+		})
 	}
 
 	if err = res.Err(); err != nil {
@@ -119,10 +148,10 @@ func (r *NotesRepository) GetNote(id int, login string) (model.Note, error) {
 	var note model.Note
 
 	err := r.db.QueryRow(
-		"SELECT id, title, text, group_id FROM notes WHERE id = $1 AND user_login = $2",
+		"SELECT id, user_login, title, text, COALESCE(group_id,0) FROM notes WHERE id = $1 AND user_login = $2",
 		id,
 		login,
-	).Scan(&note)
+	).Scan(&note.Id, &note.User_login, &note.Title, &note.Text, &note.Group_id)
 	if err != nil {
 		return note, err
 	}

@@ -11,12 +11,12 @@ type NotesRepository interface {
 	AddGroup(login string, nameGroup string) error
 	DelGroup(id int, login string) error
 	UpdateGroup(id int, login string, newNameGroup string) error
-	GetGroupList(login string) ([]model.Group, error)
+	GetGroupList(login string) (model.GroupList, error)
 	// NOTES
 	AddNote(login string, title string, text string, group_id int) error
 	DelNote(id int, login string) error
 	UpdateNote(id int, login string, title string, text string, group_id int) error
-	GetNotesList(login string, group_id int) ([]model.Note, error)
+	GetNotesList(login string, group_id int) (model.NoteList, error)
 	GetNote(id int, login string) (model.Note, error)
 }
 
@@ -56,7 +56,7 @@ func (s *NotesService) UpdateGroup(id int, login string, newNameGroup string) er
 	return err
 }
 
-func (s *NotesService) GetGroupList(login string) ([]model.Group, error) {
+func (s *NotesService) GetGroupList(login string) (model.GroupList, error) {
 	groupList, err := s.repository.GetGroupList(login)
 	if err != nil {
 		logger.NewLog("service - GetGroupList()", 2, err, "Filed to get group list in repository", nil)
@@ -110,7 +110,7 @@ func (s *NotesService) UpdateNote(id int, login string, title string, text strin
 	return err
 }
 
-func (s *NotesService) GetNotesList(login string, group_id int) ([]model.Note, error) {
+func (s *NotesService) GetNotesList(login string, group_id int) (model.NoteList, error) {
 	list, err := s.repository.GetNotesList(login, group_id)
 	if err != nil {
 		gID := strconv.Itoa(group_id)
