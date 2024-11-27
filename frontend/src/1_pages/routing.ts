@@ -18,7 +18,7 @@ const routes = [
         name: 'auth',
         component: PageAuthorization,
         meta: {
-            layout: 'base',
+            layout: 'auth',
         },
     },
 ];

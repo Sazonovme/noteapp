@@ -1,0 +1,21 @@
+.container {
+    position: relative;
+
+    height: 85vh;
+    max-width: 70vw;
+
+    padding: var(--w-indent-xxl);
+
+    overflow: auto;
+}
+
+.switcher {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+}
+
+.text-container {
+    display: flex;
+    height: 100%;
+}

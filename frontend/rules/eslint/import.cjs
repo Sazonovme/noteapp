@@ -48,37 +48,37 @@ module.exports = {
             groups: ['builtin', 'external', 'unknown', 'internal', 'parent', 'sibling', 'index'],
             pathGroups: [
                 {
-                    pattern: 'app/**',
+                    pattern: '{@,}app/**',
                     group: 'unknown',
                     position: 'after',
                 },
                 {
-                    pattern: '{src/1_,}pages{/**,}',
+                    pattern: '{src/1_,@,}pages{/**,}',
                     group: 'unknown',
                     position: 'after',
                 },
                 {
-                    pattern: '{src/2_,}widgets{/**,}',
+                    pattern: '{src/2_,@,}widgets{/**,}',
                     group: 'unknown',
                     position: 'after',
                 },
                 {
-                    pattern: '{src/3_,}features{/**,}',
+                    pattern: '{src/3_,@,}features{/**,}',
                     group: 'unknown',
                     position: 'after',
                 },
                 {
-                    pattern: '{src/4_,}entities{/**,}',
+                    pattern: '{src/4_,@,}entities{/**,}',
                     group: 'unknown',
                     position: 'after',
                 },
                 {
-                    pattern: 'src/**',
+                    pattern: '@/**',
                     group: 'unknown',
                     position: 'after',
                 },
                 {
-                    pattern: 'shared/**',
+                    pattern: '@shared/**',
                     group: 'unknown',
                     position: 'after',
                 },

@@ -1,4 +1,9 @@
 <template>
+    <RouterLink to="/">
+        <button>
+            {{ '<- Назад' }}
+        </button>
+    </RouterLink>
     <div
         ref="backgroundRef"
         class="background"
