@@ -58,7 +58,7 @@ func NewHandler(userService UserService, authService AuthService, notesService N
 	}
 }
 
-func (h *Handler) InitRouter() *http.ServeMux {
+func (h *Handler) InitHandler() *http.ServeMux {
 	router := http.NewServeMux()
 
 	// AUTH

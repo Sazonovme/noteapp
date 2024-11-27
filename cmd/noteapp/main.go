@@ -1,10 +1,11 @@
 package main
 
 import (
-	"encoding/json"
+	"context"
 	"noteapp/internal/server"
 	"noteapp/pkg/logger"
-	"os"
+	"os/signal"
+	"syscall"
 
 	_ "github.com/lib/pq"
 )
@@ -14,18 +15,8 @@ func init() {
 }
 
 func main() {
-	data, err := os.ReadFile("../../configs/config.json")
-	if err != nil {
-		logger.NewLog("main - main()", 1, nil, "Filed to read config.json", nil)
-		return
-	}
+	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
+	defer stop()
 
-	config := server.NewConfig()
-	if err = json.Unmarshal(data, config); err != nil {
-		logger.NewLog("main - main()", 1, nil, "Filed to unmarshal JSON", nil)
-		return
-	}
-
-	logger.SetLevel(config.LogLevel)
-	server.Start(config)
+	server.Start(ctx)
 }
