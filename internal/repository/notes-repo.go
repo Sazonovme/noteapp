@@ -2,7 +2,12 @@ package repository
 
 import (
 	"database/sql"
+	"errors"
 	"noteapp/internal/model"
+)
+
+var (
+	ErrInvalidData = errors.New("incorrect data")
 )
 
 type NotesRepository struct {
@@ -18,18 +23,51 @@ func NewNotesRepository(db *sql.DB) *NotesRepository {
 // GROUPS
 
 func (r *NotesRepository) AddGroup(login string, nameGroup string) error {
-	_, err := r.db.Exec("INSERT INTO groups(user_login, name) VALUES ($1, $2)", login, nameGroup)
-	return err
+	res, err := r.db.Exec("INSERT INTO groups(user_login, name) VALUES ($1, $2)", login, nameGroup)
+	if err != nil {
+		return err
+	}
+
+	count, err := res.RowsAffected()
+	if err != nil {
+		return err
+	}
+	if count == 0 {
+		return ErrInvalidData
+	}
+	return nil
 }
 
 func (r *NotesRepository) DelGroup(id int, login string) error {
-	_, err := r.db.Exec("DELETE FROM groups WHERE id = $1 AND user_login = $2", id, login)
-	return err
+	res, err := r.db.Exec("DELETE FROM groups WHERE id = $1 AND user_login = $2", id, login)
+	if err != nil {
+		return err
+	}
+
+	count, err := res.RowsAffected()
+	if err != nil {
+		return err
+	}
+	if count == 0 {
+		return ErrInvalidData
+	}
+	return nil
 }
 
 func (r *NotesRepository) UpdateGroup(id int, login string, newNameGroup string) error {
-	_, err := r.db.Exec("UPDATE groups SET name = $1 WHERE id = $2 AND user_login = $3", newNameGroup, id, login)
-	return err
+	res, err := r.db.Exec("UPDATE groups SET name = $1 WHERE id = $2 AND user_login = $3", newNameGroup, id, login)
+	if err != nil {
+		return err
+	}
+
+	count, err := res.RowsAffected()
+	if err != nil {
+		return err
+	}
+	if count == 0 {
+		return ErrInvalidData
+	}
+	return nil
 }
 
 func (r *NotesRepository) GetGroupList(login string) (model.GroupList, error) {
@@ -80,18 +118,41 @@ func (r *NotesRepository) AddNote(login string, title string, text string, group
 }
 
 func (r *NotesRepository) DelNote(id int, login string) error {
-	_, err := r.db.Exec("DELETE FROM notes WHERE id = $1 AND user_login = $2", id, login)
-	return err
+	res, err := r.db.Exec("DELETE FROM notes WHERE id = $1 AND user_login = $2", id, login)
+	if err != nil {
+		return err
+	}
+
+	count, err := res.RowsAffected()
+	if err != nil {
+		return err
+	}
+	if count == 0 {
+		return ErrInvalidData
+	}
+	return nil
 }
 
 func (r *NotesRepository) UpdateNote(id int, login string, title string, text string, group_id int) error {
+	var res sql.Result
+	var err error
 	if group_id == 0 {
-		_, err := r.db.Exec("UPDATE notes SET title = $1, text = $2 WHERE id = $3 AND user_login = $4", title, text, id, login)
-		return err
+		res, err = r.db.Exec("UPDATE notes SET title = $1, text = $2 WHERE id = $3 AND user_login = $4", title, text, id, login)
 	} else {
-		_, err := r.db.Exec("UPDATE notes SET title = $1, text = $2, group_id = $3 WHERE id = $4 AND user_login = $5", title, text, id, group_id, login)
+		res, err = r.db.Exec("UPDATE notes SET title = $1, text = $2, group_id = $3 WHERE id = $4 AND user_login = $5", title, text, id, group_id, login)
+	}
+	if err != nil {
 		return err
 	}
+
+	count, err := res.RowsAffected()
+	if err != nil {
+		return err
+	}
+	if count == 0 {
+		return ErrInvalidData
+	}
+	return nil
 }
 
 func (r *NotesRepository) GetNotesList(login string, group_id int) (model.NoteList, error) {
