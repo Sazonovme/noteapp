@@ -1,20 +1,27 @@
 package api
 
 import (
+	"database/sql"
 	"encoding/json"
 	"net/http"
+	"noteapp/internal/database"
 	"noteapp/internal/repository"
 	"noteapp/internal/service"
-	"noteapp/pkg/database"
-	"noteapp/pkg/logger"
 	"os"
+	"testing"
 )
 
-func NewTestHandler() (*http.ServeMux, error) {
+func NewTestHandler(t *testing.T) (
+	*http.ServeMux,
+	func(*sql.DB, *testing.T, string),
+	func(*sql.DB, *testing.T, ...string),
+	*sql.DB,
+) {
+	t.Helper()
+
 	data, err := os.ReadFile("../../configs/config.json")
 	if err != nil {
-		logger.NewLog("server - Start()", 1, nil, "Filed to read config.json", nil)
-		return nil, err
+		t.Fatal(err)
 	}
 
 	config := struct {
@@ -28,9 +35,8 @@ func NewTestHandler() (*http.ServeMux, error) {
 			Sslmode  string `json:"sslmode"`
 		} `json:"database"`
 	}{}
-	if err = json.Unmarshal(data, config); err != nil {
-		logger.NewLog("server - Start()", 1, nil, "Filed to unmarshal JSON", nil)
-		return nil, err
+	if err = json.Unmarshal(data, &config); err != nil {
+		t.Fatal(err)
 	}
 
 	info := database.ConnectionInfo{
@@ -40,12 +46,8 @@ func NewTestHandler() (*http.ServeMux, error) {
 		DBName:   config.DataBase.Dbname,
 		SSLMode:  config.DataBase.Sslmode,
 	}
-	db, err := database.NewPostgresConnection(info)
-	if err != nil {
-		logger.NewLog("server - Start()", 1, err, "Failed to create *sql.DB", info)
-		return nil, err
-	}
-	defer db.Close()
+	db, create, teardown := database.NewTestPostgresConnection(t, info)
+
 	// init deps
 	authRepo := repository.NewAuthRepository(db)
 	userRepo := repository.NewUserRepository(db)
@@ -57,5 +59,5 @@ func NewTestHandler() (*http.ServeMux, error) {
 
 	h := NewHandler(userService, authService, noteService)
 	handler := h.InitHandler()
-	return handler, nil
+	return handler, create, teardown, db
 }
