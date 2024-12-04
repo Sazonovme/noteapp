@@ -3,7 +3,6 @@ package database
 import (
 	"database/sql"
 	"fmt"
-	"strings"
 	"testing"
 
 	_ "github.com/lib/pq"
@@ -12,7 +11,7 @@ import (
 func NewTestPostgresConnection(t *testing.T, info ConnectionInfo) (
 	*sql.DB,
 	func(*sql.DB, *testing.T, string),
-	func(*sql.DB, *testing.T, ...string),
+	func(*sql.DB, *testing.T, string),
 ) {
 	t.Helper()
 
@@ -31,21 +30,39 @@ func NewTestPostgresConnection(t *testing.T, info ConnectionInfo) (
 	return db, CreateTestTables, DeleteTestTables
 }
 
-func DeleteTestTables(db *sql.DB, t *testing.T, tables ...string) {
+func DeleteTestTables(db *sql.DB, t *testing.T, table string) {
 	t.Helper()
 
-	if len(tables) > 0 {
-		res, err := db.Exec(fmt.Sprintf("DROP TABLE %s CASCADE", strings.Join(tables, ", ")))
+	var res sql.Result
+	var err error
 
-		if err != nil {
-			t.Fatal(err)
-		}
+	switch table {
 
-		count, err := res.RowsAffected()
-		if err != nil && count == 0 {
-			t.Fatal(err)
-		}
+	case "test_users":
+		res, err = db.Exec(fmt.Sprintf("DROP TABLE %s CASCADE", "test_users"))
+
+	case "test_refreshsessions":
+		res, err = db.Exec(fmt.Sprintf("DROP TABLE %s CASCADE", "test_users, test_refreshsessions"))
+
+	case "test_groups":
+		res, err = db.Exec(fmt.Sprintf("DROP TABLE %s CASCADE", "test_users, test_groups"))
+
+	case "test_notes":
+		res, err = db.Exec(fmt.Sprintf("DROP TABLE %s CASCADE", "test_users, test_groups, test_notes"))
+
+	default:
+		t.Fatal("Invalid table name: " + table)
 	}
+
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	count, err := res.RowsAffected()
+	if err != nil && count == 0 {
+		t.Fatal(err)
+	}
+
 	db.Close()
 }
 
@@ -54,18 +71,18 @@ func CreateTestTables(db *sql.DB, t *testing.T, table string) {
 
 	switch table {
 
-	case "test-users":
+	case "test_users":
 		CreateTestTableUsers(t, db)
 
-	case "test-refreshsessions":
+	case "test_refreshsessions":
 		CreateTestTableUsers(t, db)
 		CreateTestTableRefreshsessions(t, db)
 
-	case "test-groups":
+	case "test_groups":
 		CreateTestTableUsers(t, db)
 		CreateTestTableGroups(t, db)
 
-	case "test-notes":
+	case "test_notes":
 		CreateTestTableUsers(t, db)
 		CreateTestTableGroups(t, db)
 		CreateTestTableNotes(t, db)
@@ -79,9 +96,9 @@ func CreateTestTableGroups(t *testing.T, db *sql.DB) {
 	t.Helper()
 
 	res, err := db.Exec(
-		`CREATE TABLE test-groups(
+		`CREATE TABLE test_groups(
 			id SERIAL PRIMARY KEY,
-			user_login VARCHAR(100) NOT NULL REFERENCES test-users(login) ON UPDATE CASCADE ON DELETE CASCADE,
+			user_login VARCHAR(100) NOT NULL REFERENCES test_users(login) ON UPDATE CASCADE ON DELETE CASCADE,
 			name VARCHAR(100) NOT NULL
 		)`,
 	)
@@ -119,9 +136,9 @@ func CreateTestTableRefreshsessions(t *testing.T, db *sql.DB) {
 	t.Helper()
 
 	res, err := db.Exec(
-		`CREATE TABLE test-refreshsessions(
+		`CREATE TABLE test_refreshsessions(
 			id SERIAL PRIMARY KEY,
-			user_login VARCHAR(100) NOT NULL REFERENCES test-users(login) ON UPDATE CASCADE ON DELETE CASCADE,
+			user_login VARCHAR(100) NOT NULL REFERENCES test_users(login) ON UPDATE CASCADE ON DELETE CASCADE,
 			fingerprint VARCHAR(300) NOT NULL,
 			refreshtoken VARCHAR(300) NOT NULL,
 			exp TIMESTAMP NOT NULL,
@@ -142,12 +159,12 @@ func CreateTestTableNotes(t *testing.T, db *sql.DB) {
 	t.Helper()
 
 	res, err := db.Exec(
-		`CREATE TABLE test-notes(
+		`CREATE TABLE test_notes(
 			id SERIAL PRIMARY KEY,
-			user_login VARCHAR(100) NOT NULL REFERENCES test-users(login) ON UPDATE CASCADE ON DELETE CASCADE,
+			user_login VARCHAR(100) NOT NULL REFERENCES test_users(login) ON UPDATE CASCADE ON DELETE CASCADE,
 			title VARCHAR(100) NOT NULL,
 			text VARCHAR(10485760),
-			group_id INT REFERENCES test-groups(id) ON UPDATE CASCADE ON DELETE SET NULL
+			group_id INT REFERENCES test_groups(id) ON UPDATE CASCADE ON DELETE SET NULL
 		)`,
 	)
 	if err != nil {

@@ -14,7 +14,7 @@ import (
 func NewTestHandler(t *testing.T) (
 	*http.ServeMux,
 	func(*sql.DB, *testing.T, string),
-	func(*sql.DB, *testing.T, ...string),
+	func(*sql.DB, *testing.T, string),
 	*sql.DB,
 ) {
 	t.Helper()
