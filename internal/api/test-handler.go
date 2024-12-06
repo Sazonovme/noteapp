@@ -49,7 +49,7 @@ func NewTestHandler(t *testing.T) (
 	db, create, teardown := database.NewTestPostgresConnection(t, info)
 
 	// init deps
-	authRepo := repository.NewAuthRepository(db)
+	authRepo := repository.NewTestAuthRepository(db)
 	userRepo := repository.NewTestUserRepository(db)
 	noteRepo := repository.NewNotesRepository(db)
 
