@@ -58,7 +58,7 @@ func NewHandler(userService UserService, authService AuthService, notesService N
 	}
 }
 
-func (h *Handler) InitRouter() *http.ServeMux {
+func (h *Handler) InitHandler() *http.ServeMux {
 	router := http.NewServeMux()
 
 	// AUTH
@@ -170,6 +170,14 @@ func (h *Handler) createUser(w http.ResponseWriter, r *http.Request) {
 	}
 
 	err = h.UserService.CreateUser(&d.User)
+	if err == service.ErrUserExist ||
+		err == model.ErrValidationPassword ||
+		err == model.ErrValidationLogin {
+
+		apiError(w, r, http.StatusBadRequest, err)
+		return
+	}
+
 	if err != nil {
 		apiError(w, r, http.StatusInternalServerError, nil)
 		return
@@ -330,6 +338,10 @@ func (h *Handler) delGroup(w http.ResponseWriter, r *http.Request) {
 	}
 
 	err = h.NotesService.DelGroup(id, login)
+	if err == repository.ErrInvalidData {
+		apiError(w, r, http.StatusBadRequest, repository.ErrInvalidData)
+		return
+	}
 	if err != nil {
 		apiError(w, r, http.StatusInternalServerError, nil)
 		return
@@ -370,6 +382,10 @@ func (h *Handler) updateGroup(w http.ResponseWriter, r *http.Request) {
 	}
 
 	err = h.NotesService.UpdateGroup(id, login, name)
+	if err == repository.ErrInvalidData {
+		apiError(w, r, http.StatusBadRequest, repository.ErrInvalidData)
+		return
+	}
 	if err != nil {
 		apiError(w, r, http.StatusInternalServerError, nil)
 		return
@@ -393,7 +409,7 @@ func (h *Handler) getGroupList(w http.ResponseWriter, r *http.Request) {
 	}
 
 	login, ok := data["login"]
-	if !ok {
+	if !(ok && login != "") {
 		logger.NewLog("api - getGroupList()", 2, nil, "Field login not exist in r.Context()", "login = "+login)
 		apiError(w, r, http.StatusBadRequest, errRequiredFieldsMissing)
 		return
@@ -493,6 +509,10 @@ func (h *Handler) delNote(w http.ResponseWriter, r *http.Request) {
 	}
 
 	err = h.NotesService.DelNote(id, login)
+	if err == repository.ErrInvalidData {
+		apiError(w, r, http.StatusBadRequest, repository.ErrInvalidData)
+		return
+	}
 	if err != nil {
 		apiError(w, r, http.StatusInternalServerError, nil)
 		return
@@ -546,6 +566,10 @@ func (h *Handler) updateNote(w http.ResponseWriter, r *http.Request) {
 	}
 
 	err = h.NotesService.UpdateNote(id, login, title, text, group_id)
+	if err == repository.ErrInvalidData {
+		apiError(w, r, http.StatusBadRequest, repository.ErrInvalidData)
+		return
+	}
 	if err != nil {
 		apiError(w, r, http.StatusInternalServerError, nil)
 		return

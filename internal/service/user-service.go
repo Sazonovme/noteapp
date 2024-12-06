@@ -7,7 +7,7 @@ import (
 )
 
 var (
-	errUserExist = errors.New("user with this login already exist")
+	ErrUserExist = errors.New("user with this login already exist")
 )
 
 type UserRepository interface {
@@ -29,7 +29,7 @@ func (s *UserService) CreateUser(u *model.User) error {
 	_, err := s.repository.FindByLogin(u.Login)
 	if err == nil {
 		logger.NewLog("service - CreateUser()", 5, err, "user exist", u.Login)
-		return errUserExist
+		return ErrUserExist
 	}
 
 	err = u.ValidateBeforeCreate()

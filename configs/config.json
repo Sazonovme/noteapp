@@ -1,6 +1,7 @@
 {
     "log-level" : 6,
     "port" : 8080,
+    "addr" : "localhost:8080",
     "database" : {
         "host" : "localhost",
         "username" : "notesapp",

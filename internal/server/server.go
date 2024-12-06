@@ -1,36 +1,43 @@
 package server
 
 import (
+	"context"
+	"encoding/json"
+	"fmt"
 	"net/http"
 	"noteapp/internal/api"
+	"noteapp/internal/database"
 	"noteapp/internal/repository"
 	"noteapp/internal/service"
-	"noteapp/pkg/database"
 	"noteapp/pkg/logger"
-	"strconv"
+	"os"
+	"time"
 )
 
-type server struct {
-	router *http.ServeMux
-}
+func Start(ctx context.Context) error {
+	data, err := os.ReadFile("../../configs/config.json")
+	if err != nil {
+		logger.NewLog("server - Start()", 1, nil, "Filed to read config.json", nil)
+		return err
+	}
 
-func (s *server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	s.router.ServeHTTP(w, r)
-}
-
-func Start(c *configServer) {
+	config := NewConfig()
+	if err = json.Unmarshal(data, config); err != nil {
+		logger.NewLog("server - Start()", 1, nil, "Filed to unmarshal JSON", nil)
+		return err
+	}
 
 	info := database.ConnectionInfo{
-		Host: c.DataBase.Host,
+		Host: config.DataBase.Host,
 		//Port:     c.Port,
-		Username: c.DataBase.Username,
-		DBName:   c.DataBase.Dbname,
-		SSLMode:  c.DataBase.Sslmode,
+		Username: config.DataBase.Username,
+		DBName:   config.DataBase.Dbname,
+		SSLMode:  config.DataBase.Sslmode,
 	}
 	db, err := database.NewPostgresConnection(info)
 	if err != nil {
 		logger.NewLog("server - Start()", 1, err, "Failed to create *sql.DB", info)
-		return
+		return err
 	}
 	defer db.Close()
 
@@ -45,10 +52,25 @@ func Start(c *configServer) {
 
 	handler := api.NewHandler(userService, authService, noteService)
 
-	srv := &server{
-		router: handler.InitRouter(),
+	srv := &http.Server{
+		Addr:    config.Addr,
+		Handler: handler.InitHandler(),
 	}
 
+	go func() {
+		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			logger.NewLog("server - Start()", 1, err, "Filed to start server", info)
+		}
+	}()
+
 	logger.NewLog("server - Start()", 5, nil, "Server starting...", nil)
-	http.ListenAndServe(":"+strconv.Itoa(c.Port), srv)
+	<-ctx.Done()
+
+	shutdownCtx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
+	defer cancel()
+
+	if err := srv.Shutdown(shutdownCtx); err != nil {
+		return fmt.Errorf("shutdown: %w", err)
+	}
+	return nil
 }
