@@ -50,7 +50,7 @@ func NewTestHandler(t *testing.T) (
 
 	// init deps
 	authRepo := repository.NewAuthRepository(db)
-	userRepo := repository.NewUserRepository(db)
+	userRepo := repository.NewTestUserRepository(db)
 	noteRepo := repository.NewNotesRepository(db)
 
 	authService := service.NewAuthService(authRepo)
