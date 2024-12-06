@@ -170,6 +170,14 @@ func (h *Handler) createUser(w http.ResponseWriter, r *http.Request) {
 	}
 
 	err = h.UserService.CreateUser(&d.User)
+	if err == service.ErrUserExist ||
+		err == model.ErrValidationPassword ||
+		err == model.ErrValidationLogin {
+
+		apiError(w, r, http.StatusBadRequest, err)
+		return
+	}
+
 	if err != nil {
 		apiError(w, r, http.StatusInternalServerError, nil)
 		return

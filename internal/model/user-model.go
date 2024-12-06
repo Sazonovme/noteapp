@@ -8,7 +8,9 @@ import (
 )
 
 var (
-	errInvalidPassword = errors.New("invalid password")
+	ErrInvalidPassword    = errors.New("invalid login or password")
+	ErrValidationLogin    = errors.New("err login validation len - max = 50, min = 5, chars - only letters and nums")
+	ErrValidationPassword = errors.New("err password validation len - max = 50, min = 5, chars - ACSII")
 )
 
 type User struct {
@@ -20,42 +22,20 @@ type User struct {
 
 func (u *User) ValidateBeforeCreate() error {
 
-	var errString string
-
 	// login
-	ok := govalidator.MaxStringLength(u.Login, "50")
-	if !ok {
-		errString += "invalid length login, max lenght - 50\n"
-	}
-
-	ok = govalidator.MinStringLength(u.Login, "5")
-	if !ok {
-		errString += "invalid length login, min lenght - 5\n"
-	}
-
-	ok = govalidator.IsAlphanumeric(u.Login)
-	if !ok {
-		errString += "invalid string login, valid characters are letters and numbers\n"
+	ok1 := govalidator.MaxStringLength(u.Login, "50")
+	ok2 := govalidator.MinStringLength(u.Login, "5")
+	ok3 := govalidator.IsAlphanumeric(u.Login)
+	if !(ok1 && ok2 && ok3) {
+		return ErrValidationLogin
 	}
 
 	// password
-	ok = govalidator.MaxStringLength(u.Password, "50")
-	if !ok {
-		errString += "invalid length password, max lenght - 50\n"
-	}
-
-	ok = govalidator.MinStringLength(u.Password, "5")
-	if !ok {
-		errString += "invalid length password, min lenght - 5\n"
-	}
-
-	ok = govalidator.IsASCII(u.Password)
-	if !ok {
-		errString += "invalid string password, valid characters ASCII\n"
-	}
-
-	if errString != "" {
-		return errors.New(errString)
+	ok1 = govalidator.MaxStringLength(u.Password, "50")
+	ok2 = govalidator.MinStringLength(u.Password, "5")
+	ok3 = govalidator.IsASCII(u.Password)
+	if !(ok1 && ok2 && ok3) {
+		return ErrValidationPassword
 	}
 
 	return nil
@@ -73,7 +53,7 @@ func (u *User) EncryptPassword() (*User, error) {
 func (u *User) ComparePassword(password string) error {
 	err := bcrypt.CompareHashAndPassword([]byte(u.Password), []byte(password))
 	if err != nil {
-		return errInvalidPassword
+		return ErrInvalidPassword
 	}
 	return nil
 }
