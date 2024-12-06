@@ -27,6 +27,12 @@ func (u *User) ValidateBeforeCreate() error {
 	if !ok {
 		errString += "invalid length login, max lenght - 50\n"
 	}
+
+	ok = govalidator.MinStringLength(u.Login, "5")
+	if !ok {
+		errString += "invalid length login, min lenght - 5\n"
+	}
+
 	ok = govalidator.IsAlphanumeric(u.Login)
 	if !ok {
 		errString += "invalid string login, valid characters are letters and numbers\n"
@@ -37,6 +43,12 @@ func (u *User) ValidateBeforeCreate() error {
 	if !ok {
 		errString += "invalid length password, max lenght - 50\n"
 	}
+
+	ok = govalidator.MinStringLength(u.Password, "5")
+	if !ok {
+		errString += "invalid length password, min lenght - 5\n"
+	}
+
 	ok = govalidator.IsASCII(u.Password)
 	if !ok {
 		errString += "invalid string password, valid characters ASCII\n"
