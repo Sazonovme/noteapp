@@ -220,7 +220,7 @@ func (h *Handler) authUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	refSession, err := h.AuthService.MakeRefreshSession(u.Login, u.Fingerprint)
+	refSession, err := h.AuthService.MakeRefreshSession(u.Login, d.User.Fingerprint)
 	if err != nil {
 		apiError(w, r, http.StatusInternalServerError, nil)
 		return
