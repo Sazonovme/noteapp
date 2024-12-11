@@ -36,6 +36,7 @@ func NewAuthService(r AuthRepository) *AuthService {
 }
 
 func (s *AuthService) MakeRefreshSession(login string, fingerprint string) (*RequestTokenData, error) {
+
 	err := s.repository.DeleteRefreshSession(login, fingerprint)
 	if err != nil {
 		logger.NewLog("service - MakeRefreshSession()", 2, err, "Filed to delete session in repository", "login: "+login+", fingerprint: "+fingerprint)
