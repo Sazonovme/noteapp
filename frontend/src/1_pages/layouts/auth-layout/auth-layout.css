@@ -10,6 +10,12 @@
     padding: 20px !important;
 }
 
+.img {
+    padding: var(--w-indent-3xs);
+    border: var(--w-border-solid-md);
+    border-radius: var(--w-border-radius-md);
+}
+
 .auth-button {
     position: fixed;
     top: 20px;

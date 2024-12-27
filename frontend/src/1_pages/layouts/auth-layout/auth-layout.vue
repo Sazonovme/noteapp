@@ -3,7 +3,13 @@
         class="link"
         :to="ROUTES_PATH_COMMON.HOME"
     >
-        На главную
+        <img
+            class="img"
+            src="/public/icons/home.svg"
+            width="25"
+            height="25"
+            alt="На главную"
+        >
     </BackButton>
     <div class="container">
         <main class="main">
