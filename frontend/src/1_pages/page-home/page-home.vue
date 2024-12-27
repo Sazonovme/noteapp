@@ -2,7 +2,13 @@
     <MarkdownTreeNotes />
     <div class="container">
         <MarkdownToggleReadOnly class="switcher" />
-        <DeleteNoteButton class="delete-btn" />
+        <DeleteNoteButton
+            class="delete-btn"
+            size="large"
+            circle
+        >
+            <div class="img" />
+        </DeleteNoteButton>
 
         <MarkdownWidget />
     </div>

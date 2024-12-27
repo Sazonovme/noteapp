@@ -3,11 +3,14 @@
         <ElButton
             :class="'delete-note-button ' + $attrs.class"
             type="danger"
-            size="small"
+            :size="props.size || 'small'"
+            :circle="props.circle"
             plain
             @click="actions.toggleDialog"
         >
-            Удалить
+            <slot>
+                Удалить
+            </slot>
         </ElButton>
         <ElDialog
             v-model="state.dialogVisible.value"
@@ -36,6 +39,7 @@ import { ElButton, ElDialog } from 'element-plus';
 
 import { useDeleteNoteButton } from './use-delete-note-button';
 
+const props = defineProps(['circle', 'size']);
 const emit = defineEmits(['success-delete']);
 
 const { actions, state } = useDeleteNoteButton(emit);
