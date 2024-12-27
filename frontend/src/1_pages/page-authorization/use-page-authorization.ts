@@ -8,8 +8,8 @@ const useState = () => {
 
 const useActions = (state: ReturnType<typeof useState>) => {
     const onMoveBackground = (event: MouseEvent): void => {
-        const height = (innerHeight / 2 - event.pageY) * 0.15;
-        const width = (innerWidth / 2 - event.pageX) * 0.15;
+        const height = (innerHeight / 2 - event.pageY) * 0.2;
+        const width = (innerWidth / 2 - event.pageX) * 0.2;
         const heightSymbol = height < 0 ? '+' : '-';
         const widthSymbol = width < 0 ? '+' : '-';
 

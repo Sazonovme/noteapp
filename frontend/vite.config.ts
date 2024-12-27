@@ -17,7 +17,7 @@ export default defineConfig({
             '@widgets': path.resolve(__dirname, './src/2_widgets'),
             '@features': path.resolve(__dirname, './src/3_features'),
             '@entities': path.resolve(__dirname, './src/4_entities'),
-            '@shared': path.resolve(__dirname, './src/shared'),
+            '@shared': path.resolve(__dirname, 'src/shared'),
             '@': path.resolve(__dirname, './src'),
         },
         extensions: ['.ts', '.tsx', '.js', 'jsx', '.mjs', '.css', 'd.ts', '.vue'],
