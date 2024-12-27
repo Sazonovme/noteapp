@@ -1,4 +1,8 @@
 .button {
+    display: flex;
+    align-items: center;
+    flex-direction: row-reverse;
+
     position: fixed;
     top: 10%;
     left: -40px;
@@ -10,9 +14,25 @@
     outline: none;
     border-radius: var(--w-border-radius-sm);
 
+    cursor: pointer;
+
     transition: all .2s;
 }
 
 .button:hover {
     left: -20px;
+}
+
+.button-img {
+    height: 20px;
+    width: 20px;
+
+    background-color: var(--w-white);
+
+    transition: background-color .2s;
+
+    -webkit-mask-image: url('/public/icons/pencil-square.svg');
+    mask-image: url('/public/icons/pencil-square.svg');
+    -webkit-mask-position: center;
+    -webkit-mask-repeat: no-repeat;
 }

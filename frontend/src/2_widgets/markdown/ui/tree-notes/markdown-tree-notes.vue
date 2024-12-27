@@ -2,7 +2,9 @@
     <button
         class="button"
         @click="toggleOpen"
-    />
+    >
+        <div class="button-img" />
+    </button>
     <ElDrawer
         v-model="isOpen"
         title="Опачки! не нужный title"
