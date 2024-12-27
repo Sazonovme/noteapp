@@ -1,3 +1,23 @@
 .container {
+    position: relative;
+
+    height: 85vh;
+    max-width: 70vw;
+
+    padding: var(--w-indent-xxl);
     margin: 0 auto;
+
+    overflow: auto;
+}
+
+.switcher {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+}
+
+.delete-btn {
+    position: absolute;
+    top: 50px;
+    right: 20px;
 }

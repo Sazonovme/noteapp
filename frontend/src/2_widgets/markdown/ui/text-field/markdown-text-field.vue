@@ -1,24 +1,20 @@
 <template>
-    <div class="container">
-        <MarkdownToggleReadOnly class="switcher" />
-
-        <div class="text-container">
-            <MarkdownRender
-                v-if="markdownStore.readOnly"
-                :markdown-text="text"
-            />
-            <MarkdownWriteArea
-                v-else
-                v-model="text"
-            />
-        </div>
+    <div class="text-container">
+        <MarkdownRender
+            v-if="markdownStore.readOnly"
+            :markdown-text="text"
+        />
+        <MarkdownWriteArea
+            v-else
+            v-model="text"
+        />
     </div>
 </template>
 
 <script setup lang="ts">
 import { ref } from 'vue';
 
-import { MarkdownToggleReadOnly, MarkdownWriteArea } from '@features/markdown';
+import { MarkdownWriteArea } from '@features/markdown';
 
 import { MarkdownRender, useMarkdownStore } from '@entities/markdown';
 

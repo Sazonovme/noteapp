@@ -1,14 +1,16 @@
 <template>
     <button
         class="button"
-        @click="setOpen"
+        @click="toggleOpen"
     />
     <ElDrawer
         v-model="isOpen"
         title="Опачки! не нужный title"
         direction="ltr"
     >
-        <span>Тут будет список заметок!</span>
+        <div>
+            <CreateNewNoteButton @success-create="toggleOpen" />
+        </div>
     </ElDrawer>
 </template>
 
@@ -16,14 +18,15 @@
 import { ElDrawer } from 'element-plus';
 import { ref } from 'vue';
 
-import { useMarkdownStore } from '@entities/markdown';
+import { CreateNewNoteButton } from '@features/markdown';
 
-const markdownStore = useMarkdownStore();
+// import { useMarkdownStore } from '@entities/markdown';
+// const markdownStore = useMarkdownStore();
 
 const isOpen = ref(false);
 
-const setOpen = () => {
-    isOpen.value = true;
+const toggleOpen = () => {
+    isOpen.value = !isOpen.value;
 };
 </script>
 
