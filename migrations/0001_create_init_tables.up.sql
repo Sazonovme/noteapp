@@ -1,3 +1,7 @@
+CREATE ROLE notesapp;
+
+GRANT CONNECT ON DATABASE notesdb TO notesapp;
+
 CREATE TABLE users(
     id SERIAL PRIMARY KEY,
     login VARCHAR(100) NOT NULL UNIQUE,
@@ -26,4 +30,6 @@ CREATE TABLE notes(
     text VARCHAR(10485760),
     group_id INTEGER REFERENCES groups(id) ON UPDATE CASCADE ON DELETE SET NULL
 );
+
+GRANT SELECT, INSERT, UPDATE, DELETE on table users, refreshsessions, groups, notes TO notesapp;
 
