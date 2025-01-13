@@ -1,0 +1,7 @@
+DROP TABLE IF EXISTS notes;
+
+DROP TABLE IF EXISTS refreshsessions;
+
+DROP TABLE IF EXISTS groups;
+
+DROP TABLE IF EXISTS users;
