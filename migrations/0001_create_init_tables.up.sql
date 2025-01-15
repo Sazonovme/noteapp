@@ -1,7 +1,3 @@
-CREATE ROLE notesapp;
-
-GRANT CONNECT ON DATABASE notesdb TO notesapp;
-
 CREATE TABLE users(
     id SERIAL PRIMARY KEY,
     login VARCHAR(100) NOT NULL UNIQUE,
@@ -31,5 +27,9 @@ CREATE TABLE notes(
     group_id INTEGER REFERENCES groups(id) ON UPDATE CASCADE ON DELETE SET NULL
 );
 
-GRANT SELECT, INSERT, UPDATE, DELETE on table users, refreshsessions, groups, notes TO notesapp;
+CREATE ROLE notesapp WITH
+    LOGIN;
 
+GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO notesapp;
+
+GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO notesapp;
