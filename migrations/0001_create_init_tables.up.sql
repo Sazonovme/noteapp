@@ -9,7 +9,7 @@ CREATE TABLE refreshsessions(
     user_login VARCHAR(100) NOT NULL REFERENCES users(login) ON UPDATE CASCADE ON DELETE CASCADE,
     fingerprint VARCHAR(300) NOT NULL,
     refreshtoken VARCHAR(300) NOT NULL,
-    ext TIMESTAMP NOT NULL,
+    exp TIMESTAMP NOT NULL,
     iat TIMESTAMP NOT NULL
 );
 
