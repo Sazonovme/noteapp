@@ -183,9 +183,28 @@ func (h *Handler) createUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// AT ONCE AUTH
+	refSession, err := h.AuthService.MakeRefreshSession(d.User.Login, d.User.Fingerprint)
+	if err != nil {
+		apiError(w, r, http.StatusInternalServerError, nil)
+		return
+	}
+
+	respData := &service.RequestTokenData{
+		AccessToken:  refSession.AccessToken,
+		RefreshToken: refSession.RefreshToken,
+	}
+
 	w.WriteHeader(http.StatusCreated)
+
+	err = json.NewEncoder(w).Encode(respData)
+	if err != nil {
+		apiError(w, r, http.StatusInternalServerError, nil)
+		return
+	}
+
 	logger.NewLog("api - CreateUser()", 5, nil,
-		"OUT - User created "+time.Now().Format("02.01 15:04:05"), nil)
+		"OUT - User created and authorized "+time.Now().Format("02.01 15:04:05"), nil)
 }
 
 // AUTH
