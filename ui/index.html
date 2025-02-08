@@ -336,16 +336,15 @@
                 accessToken: accessToken,
             })
 
-        axios.delete('http://localhost:8080/delNote', {
+        URLstrDelNote = 'http://localhost:8080/delNote?id=' + id
+
+        axios.delete(URLstrDelNote, {
             mode: 'no-cors',
             headers: {
                 'Access-Control-Allow-Origin': '*',
                 Accept: 'application/json',
                 'Content-Type': 'application/json',
                 Authorization: 'Bearer ' + accessToken,
-            },
-            data: {
-                id: id,
             }
         }).then(
             res => console.log(res)

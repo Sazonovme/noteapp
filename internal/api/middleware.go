@@ -88,14 +88,8 @@ func middlewareAuth() Middleware {
 			}
 
 			m := map[string]string{}
-			if r.Method != http.MethodGet {
-				err := json.NewDecoder(r.Body).Decode(&m)
-				if err != nil {
-					logger.NewLog("api - middlewareAuth()", 2, err, "Field to decode r.Body", nil)
-					apiError(w, r, http.StatusInternalServerError, nil)
-					return
-				}
-			}
+
+			json.NewDecoder(r.Body).Decode(&m)
 
 			m["email"] = email
 

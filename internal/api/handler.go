@@ -560,9 +560,10 @@ func (h *Handler) delNote(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	string_id, ok1 := data["id"]
-	email, ok2 := data["email"]
-	if !(ok1 && ok2 && string_id != "" && email != "") {
+	string_id := r.URL.Query().Get("id")
+	email, ok1 := data["email"]
+	fmt.Println(string_id, email)
+	if !(ok1 && string_id != "" && email != "") {
 		logger.NewLog("api - delNote()", 2, nil, "Required fields are missing in r.Contex", nil)
 		apiError(w, r, http.StatusBadRequest, errRequiredFieldsMissing)
 		return
