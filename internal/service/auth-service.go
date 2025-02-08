@@ -35,30 +35,30 @@ func NewAuthService(r AuthRepository) *AuthService {
 	}
 }
 
-func (s *AuthService) MakeRefreshSession(login string, fingerprint string) (*RequestTokenData, error) {
+func (s *AuthService) MakeRefreshSession(email string, fingerprint string) (*RequestTokenData, error) {
 
-	err := s.repository.DeleteRefreshSession(login, fingerprint)
+	err := s.repository.DeleteRefreshSession(email, fingerprint)
 	if err != nil {
-		logger.NewLog("service - MakeRefreshSession()", 2, err, "Filed to delete session in repository", "login: "+login+", fingerprint: "+fingerprint)
+		logger.NewLog("service - MakeRefreshSession()", 2, err, "Filed to delete session in repository", "email: "+email+", fingerprint: "+fingerprint)
 		return nil, err
 	}
 
 	expAccess := time.Now().Add(15 * time.Minute)
-	aToken, err := CreateJWTToken(login, expAccess, secretKeyAccess)
+	aToken, err := CreateJWTToken(email, expAccess, secretKeyAccess)
 	if err != nil {
-		logger.NewLog("service - MakeRefreshSession()", 2, err, "Filed to Create JWT Token (Access)", "login: "+login+", expAccess: "+expAccess.Format("2006-01-02 15:04"))
+		logger.NewLog("service - MakeRefreshSession()", 2, err, "Filed to Create JWT Token (Access)", "login: "+email+", expAccess: "+expAccess.Format("2006-01-02 15:04"))
 		return nil, err
 	}
 
 	expRefresh := time.Now().Add(15 * 24 * time.Hour)
-	rToken, err := CreateJWTToken(login, expRefresh, secretKeyRefresh)
+	rToken, err := CreateJWTToken(email, expRefresh, secretKeyRefresh)
 	if err != nil {
-		logger.NewLog("service - MakeRefreshSession()", 2, err, "Filed to Create JWT Token (Refresh)", "login: "+login+", expRefresh: "+expRefresh.Format("2006-01-02 15:04"))
+		logger.NewLog("service - MakeRefreshSession()", 2, err, "Filed to Create JWT Token (Refresh)", "login: "+email+", expRefresh: "+expRefresh.Format("2006-01-02 15:04"))
 		return nil, err
 	}
 
 	session := repository.RefreshSession{
-		Login:        login,
+		Email:        email,
 		RefreshToken: rToken,
 		Exp:          expRefresh,
 		Iat:          time.Now(),
@@ -77,31 +77,31 @@ func (s *AuthService) MakeRefreshSession(login string, fingerprint string) (*Req
 }
 
 func (s *AuthService) UpdateTokens(oldRefreshToken string, fingerprint string) (*RequestTokenData, error) {
-	login, err := VerifyToken(oldRefreshToken, secretKeyRefresh)
+	email, err := VerifyToken(oldRefreshToken, secretKeyRefresh)
 	if err != nil {
 		logger.NewLog("service - UpdateTokens()", 5, err, "Filed to verify token", nil)
 		return nil, err
 	}
 
-	err = s.repository.DeleteRefreshSession(login, fingerprint)
+	err = s.repository.DeleteRefreshSession(email, fingerprint)
 	if err != nil {
-		logger.NewLog("service - UpdateTokens()", 2, err, "Filed delete refresh session in repository", "login: "+login+", fingerprint: "+fingerprint)
+		logger.NewLog("service - UpdateTokens()", 2, err, "Filed delete refresh session in repository", "email: "+email+", fingerprint: "+fingerprint)
 		return nil, err
 	}
 
-	refreshSesssion, err := s.MakeRefreshSession(login, fingerprint)
+	refreshSesssion, err := s.MakeRefreshSession(email, fingerprint)
 	if err != nil {
-		logger.NewLog("service - UpdateTokens()", 2, err, "Filed to make refresh session", "login: "+login+", fingerprint: "+fingerprint)
+		logger.NewLog("service - UpdateTokens()", 2, err, "Filed to make refresh session", "email: "+email+", fingerprint: "+fingerprint)
 		return nil, err
 	}
 
 	return refreshSesssion, nil
 }
 
-func CreateJWTToken(login string, exp time.Time, secretKey string) (string, error) {
+func CreateJWTToken(email string, exp time.Time, secretKey string) (string, error) {
 	claims := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.RegisteredClaims{
 		ExpiresAt: &jwt.NumericDate{Time: exp},
-		Subject:   login,
+		Subject:   email,
 		IssuedAt:  &jwt.NumericDate{Time: time.Now()},
 	})
 	tokenString, err := claims.SignedString([]byte(secretKey))
@@ -131,13 +131,13 @@ func VerifyToken(tokenString string, secretKey string) (string, error) {
 		return "", ErrTokenInvalid
 	}
 
-	login, ok := claims["sub"].(string)
+	email, ok := claims["sub"].(string)
 	if !ok {
 		logger.NewLog("service - VerifyToken()", 2, err, "Field sub(login) not exist in token", nil)
 		return "", ErrTokenInvalid
 	}
 
-	return login, nil
+	return email, nil
 }
 
 func VerifyAccessToken(tokenString string) (string, error) {

@@ -22,8 +22,8 @@ func NewNotesRepository(db *sql.DB) *NotesRepository {
 
 // GROUPS
 
-func (r *NotesRepository) AddGroup(login string, nameGroup string) error {
-	res, err := r.db.Exec("INSERT INTO groups(user_login, name) VALUES ($1, $2)", login, nameGroup)
+func (r *NotesRepository) AddGroup(email string, nameGroup string) error {
+	res, err := r.db.Exec("INSERT INTO groups(user_email, name) VALUES ($1, $2)", email, nameGroup)
 	if err != nil {
 		return err
 	}
@@ -38,8 +38,8 @@ func (r *NotesRepository) AddGroup(login string, nameGroup string) error {
 	return nil
 }
 
-func (r *NotesRepository) DelGroup(id int, login string) error {
-	res, err := r.db.Exec("DELETE FROM groups WHERE id = $1 AND user_login = $2", id, login)
+func (r *NotesRepository) DelGroup(id int, email string) error {
+	res, err := r.db.Exec("DELETE FROM groups WHERE id = $1 AND user_email = $2", id, email)
 	if err != nil {
 		return err
 	}
@@ -54,8 +54,8 @@ func (r *NotesRepository) DelGroup(id int, login string) error {
 	return nil
 }
 
-func (r *NotesRepository) UpdateGroup(id int, login string, newNameGroup string) error {
-	res, err := r.db.Exec("UPDATE groups SET name = $1 WHERE id = $2 AND user_login = $3", newNameGroup, id, login)
+func (r *NotesRepository) UpdateGroup(id int, email string, newNameGroup string) error {
+	res, err := r.db.Exec("UPDATE groups SET name = $1 WHERE id = $2 AND user_email = $3", newNameGroup, id, email)
 	if err != nil {
 		return err
 	}
@@ -70,10 +70,10 @@ func (r *NotesRepository) UpdateGroup(id int, login string, newNameGroup string)
 	return nil
 }
 
-func (r *NotesRepository) GetGroupList(login string) (model.GroupList, error) {
+func (r *NotesRepository) GetGroupList(email string) (model.GroupList, error) {
 	var list model.GroupList
 
-	res, err := r.db.Query("SELECT id, name FROM groups WHERE user_login = $1", login)
+	res, err := r.db.Query("SELECT id, name FROM groups WHERE user_email = $1", email)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return list, nil
@@ -105,20 +105,20 @@ func (r *NotesRepository) GetGroupList(login string) (model.GroupList, error) {
 
 // NOTES
 
-func (r *NotesRepository) AddNote(login string, title string, text string, group_id int) error {
+func (r *NotesRepository) AddNote(email string, title string, text string, group_id int) error {
 	if group_id == 0 {
-		_, err := r.db.Exec("INSERT INTO notes(user_login, title, text) VALUES ($1, $2, $3)", login, title, text)
+		_, err := r.db.Exec("INSERT INTO notes(user_email, title, text) VALUES ($1, $2, $3)", email, title, text)
 		return err
 	} else {
-		_, err := r.db.Exec(`INSERT INTO notes(user_login, title, text, group_id) 
-							VALUES ($1, $2, $3, (SELECT id as group_id FROM groups WHERE id = $4 AND user_login = $5))`,
-			login, title, text, group_id, login)
+		_, err := r.db.Exec(`INSERT INTO notes(user_email, title, text, group_id) 
+							VALUES ($1, $2, $3, (SELECT id as group_id FROM groups WHERE id = $4 AND user_email = $5))`,
+			email, title, text, group_id, email)
 		return err
 	}
 }
 
-func (r *NotesRepository) DelNote(id int, login string) error {
-	res, err := r.db.Exec("DELETE FROM notes WHERE id = $1 AND user_login = $2", id, login)
+func (r *NotesRepository) DelNote(id int, email string) error {
+	res, err := r.db.Exec("DELETE FROM notes WHERE id = $1 AND user_email = $2", id, email)
 	if err != nil {
 		return err
 	}
@@ -133,13 +133,13 @@ func (r *NotesRepository) DelNote(id int, login string) error {
 	return nil
 }
 
-func (r *NotesRepository) UpdateNote(id int, login string, title string, text string, group_id int) error {
+func (r *NotesRepository) UpdateNote(id int, email string, title string, text string, group_id int) error {
 	var res sql.Result
 	var err error
 	if group_id == 0 {
-		res, err = r.db.Exec("UPDATE notes SET title = $1, text = $2 WHERE id = $3 AND user_login = $4", title, text, id, login)
+		res, err = r.db.Exec("UPDATE notes SET title = $1, text = $2 WHERE id = $3 AND user_email = $4", title, text, id, email)
 	} else {
-		res, err = r.db.Exec("UPDATE notes SET title = $1, text = $2, group_id = $3 WHERE id = $4 AND user_login = $5", title, text, id, group_id, login)
+		res, err = r.db.Exec("UPDATE notes SET title = $1, text = $2, group_id = $3 WHERE id = $4 AND user_email = $5", title, text, id, group_id, email)
 	}
 	if err != nil {
 		return err
@@ -155,21 +155,21 @@ func (r *NotesRepository) UpdateNote(id int, login string, title string, text st
 	return nil
 }
 
-func (r *NotesRepository) GetNotesList(login string, group_id int) (model.NoteList, error) {
+func (r *NotesRepository) GetNotesList(email string, group_id int) (model.NoteList, error) {
 	var res *sql.Rows
 	var err error
 	var list model.NoteList
 
 	if group_id != 0 {
 		res, err = r.db.Query(
-			"SELECT id, title, group_id FROM notes WHERE user_login = $1 AND group_id = $2",
-			login,
+			"SELECT id, title, group_id FROM notes WHERE user_email = $1 AND group_id = $2",
+			email,
 			group_id,
 		)
 	} else {
 		res, err = r.db.Query(
-			"SELECT id, title, COALESCE(group_id,0) as group_id FROM notes WHERE user_login = $1",
-			login,
+			"SELECT id, title, COALESCE(group_id,0) as group_id FROM notes WHERE user_email = $1",
+			email,
 		)
 	}
 	if err != nil {
@@ -204,15 +204,15 @@ func (r *NotesRepository) GetNotesList(login string, group_id int) (model.NoteLi
 	return list, nil
 }
 
-func (r *NotesRepository) GetNote(id int, login string) (model.Note, error) {
+func (r *NotesRepository) GetNote(id int, email string) (model.Note, error) {
 
 	var note model.Note
 
 	err := r.db.QueryRow(
-		"SELECT id, user_login, title, text, COALESCE(group_id,0) FROM notes WHERE id = $1 AND user_login = $2",
+		"SELECT id, user_email, title, text, COALESCE(group_id,0) FROM notes WHERE id = $1 AND user_email = $2",
 		id,
-		login,
-	).Scan(&note.Id, &note.User_login, &note.Title, &note.Text, &note.Group_id)
+		email,
+	).Scan(&note.Id, &note.User_email, &note.Title, &note.Text, &note.Group_id)
 	if err != nil {
 		return note, err
 	}

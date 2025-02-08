@@ -32,32 +32,32 @@ func NewNotesService(repo NotesRepository) *NotesService {
 
 // GROUPS
 
-func (s *NotesService) AddGroup(login string, nameGroup string) error {
-	err := s.repository.AddGroup(login, nameGroup)
+func (s *NotesService) AddGroup(email string, nameGroup string) error {
+	err := s.repository.AddGroup(email, nameGroup)
 	if err != nil {
 		logger.NewLog("service - AddGroup()", 2, err, "Filed to add group in repository", nil)
 	}
 	return err
 }
 
-func (s *NotesService) DelGroup(id int, login string) error {
-	err := s.repository.DelGroup(id, login)
+func (s *NotesService) DelGroup(id int, email string) error {
+	err := s.repository.DelGroup(id, email)
 	if err != nil {
 		logger.NewLog("service - DelGroup()", 2, err, "Filed to del group in repository", nil)
 	}
 	return err
 }
 
-func (s *NotesService) UpdateGroup(id int, login string, newNameGroup string) error {
-	err := s.repository.UpdateGroup(id, login, newNameGroup)
+func (s *NotesService) UpdateGroup(id int, email string, newNameGroup string) error {
+	err := s.repository.UpdateGroup(id, email, newNameGroup)
 	if err != nil {
 		logger.NewLog("service - UpdateGroup()", 2, err, "Filed to update group in repository", nil)
 	}
 	return err
 }
 
-func (s *NotesService) GetGroupList(login string) (model.GroupList, error) {
-	groupList, err := s.repository.GetGroupList(login)
+func (s *NotesService) GetGroupList(email string) (model.GroupList, error) {
+	groupList, err := s.repository.GetGroupList(email)
 	if err != nil {
 		logger.NewLog("service - GetGroupList()", 2, err, "Filed to get group list in repository", nil)
 		return groupList, err
@@ -67,12 +67,12 @@ func (s *NotesService) GetGroupList(login string) (model.GroupList, error) {
 
 // NOTES
 
-func (s *NotesService) AddNote(login string, title string, text string, group_id int) error {
-	err := s.repository.AddNote(login, title, text, group_id)
+func (s *NotesService) AddNote(email string, title string, text string, group_id int) error {
+	err := s.repository.AddNote(email, title, text, group_id)
 	if err != nil {
 		gID := strconv.Itoa(group_id)
 		m := map[string]string{
-			"login":    login,
+			"email":    email,
 			"title":    title,
 			"text":     text,
 			"group_id": gID,
@@ -82,8 +82,8 @@ func (s *NotesService) AddNote(login string, title string, text string, group_id
 	return err
 }
 
-func (s *NotesService) DelNote(id int, login string) error {
-	err := s.repository.DelNote(id, login)
+func (s *NotesService) DelNote(id int, email string) error {
+	err := s.repository.DelNote(id, email)
 	if err != nil {
 		nID := strconv.Itoa(id)
 		m := map[string]string{
@@ -94,8 +94,8 @@ func (s *NotesService) DelNote(id int, login string) error {
 	return err
 }
 
-func (s *NotesService) UpdateNote(id int, login string, title string, text string, group_id int) error {
-	err := s.repository.UpdateNote(id, login, title, text, group_id)
+func (s *NotesService) UpdateNote(id int, email string, title string, text string, group_id int) error {
+	err := s.repository.UpdateNote(id, email, title, text, group_id)
 	if err != nil {
 		gID := strconv.Itoa(group_id)
 		nID := strconv.Itoa(id)
@@ -110,12 +110,12 @@ func (s *NotesService) UpdateNote(id int, login string, title string, text strin
 	return err
 }
 
-func (s *NotesService) GetNotesList(login string, group_id int) (model.NoteList, error) {
-	list, err := s.repository.GetNotesList(login, group_id)
+func (s *NotesService) GetNotesList(email string, group_id int) (model.NoteList, error) {
+	list, err := s.repository.GetNotesList(email, group_id)
 	if err != nil {
 		gID := strconv.Itoa(group_id)
 		m := map[string]string{
-			"login":    login,
+			"email":    email,
 			"group_id": gID,
 		}
 		logger.NewLog("service - GetNotesList()", 2, err, "Filed get notes list in repository", m)
@@ -123,8 +123,8 @@ func (s *NotesService) GetNotesList(login string, group_id int) (model.NoteList,
 	return list, err
 }
 
-func (s *NotesService) GetNote(id int, login string) (model.Note, error) {
-	note, err := s.repository.GetNote(id, login)
+func (s *NotesService) GetNote(id int, email string) (model.Note, error) {
+	note, err := s.repository.GetNote(id, email)
 	if err != nil {
 		nID := strconv.Itoa(id)
 		m := map[string]string{

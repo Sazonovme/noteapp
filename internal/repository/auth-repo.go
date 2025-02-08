@@ -6,7 +6,7 @@ import (
 )
 
 type RefreshSession struct {
-	Login        string
+	Email        string
 	RefreshToken string
 	Exp          time.Time
 	Iat          time.Time
@@ -23,7 +23,7 @@ func NewAuthRepository(db *sql.DB) *AuthRepository {
 	}
 }
 
-func (r *AuthRepository) DeleteRefreshSession(login string, fingerprint string) error {
+func (r *AuthRepository) DeleteRefreshSession(email string, fingerprint string) error {
 	_, err := r.db.Exec(
 		`WITH 
 			expiredRows AS (
@@ -34,7 +34,7 @@ func (r *AuthRepository) DeleteRefreshSession(login string, fingerprint string) 
 			thisFingerPrint AS (
 				SELECT id
 				FROM refreshSessions
-				WHERE user_login = $2
+				WHERE user_email = $2
 					AND fingerprint = $3 
 			)
 		DELETE FROM refreshSessions 
@@ -43,7 +43,7 @@ func (r *AuthRepository) DeleteRefreshSession(login string, fingerprint string) 
 				UNION ALL
 				SELECT id FROM thisFingerPrint
 			)`,
-		time.Now(), login, fingerprint)
+		time.Now(), email, fingerprint)
 	if err != nil {
 		return err
 	}
@@ -53,15 +53,15 @@ func (r *AuthRepository) DeleteRefreshSession(login string, fingerprint string) 
 			allNumeredSessions AS (
 				SELECT ROW_NUMBER() over(ORDER BY exp DESC) as number, id
 		 		FROM refreshSessions
-				WHERE user_login = $1
+				WHERE user_email = $1
 			)
 		DELETE FROM refreshSessions
 		WHERE id IN (SELECT id FROM allNumeredSessions WHERE number > 4)
-	`, login)
+	`, email)
 	return err
 }
 
 func (r *AuthRepository) WriteRefreshSession(s *RefreshSession) error {
-	_, err := r.db.Exec("INSERT INTO refreshSessions(user_login, fingerprint, refreshtoken, exp, iat) VALUES($1, $2, $3, $4, $5)", s.Login, s.Fingerprint, s.RefreshToken, s.Exp, s.Iat)
+	_, err := r.db.Exec("INSERT INTO refreshSessions(user_email, fingerprint, refreshtoken, exp, iat) VALUES($1, $2, $3, $4, $5)", s.Email, s.Fingerprint, s.RefreshToken, s.Exp, s.Iat)
 	return err
 }

@@ -23,7 +23,7 @@ import (
 // ErrValidationPassword = errors.New	("err password validation len - max = 50, min = 5, chars - ACSII")
 
 // HELPERS
-func HelperCreateUser(t *testing.T, handler *http.ServeMux, login string, password string) {
+func HelperCreateUser(t *testing.T, handler *http.ServeMux, email string, password string) {
 	t.Helper()
 
 	type request struct {
@@ -33,7 +33,7 @@ func HelperCreateUser(t *testing.T, handler *http.ServeMux, login string, passwo
 	data := new(bytes.Buffer)
 	err := json.NewEncoder(data).Encode(request{
 		model.User{
-			Login:    login,
+			Email:    email,
 			Password: password,
 		},
 	})
@@ -63,7 +63,7 @@ func HelperCreateUser(t *testing.T, handler *http.ServeMux, login string, passwo
 	}
 }
 
-func HelperAuthUser(t *testing.T, handler *http.ServeMux, login string, password string) {
+func HelperAuthUser(t *testing.T, handler *http.ServeMux, email string, password string) {
 	t.Helper()
 
 	type request struct {
@@ -77,7 +77,7 @@ func HelperAuthUser(t *testing.T, handler *http.ServeMux, login string, password
 	data := new(bytes.Buffer)
 	err := json.NewEncoder(data).Encode(request{
 		model.User{
-			Login:    login,
+			Email:    email,
 			Password: password,
 		},
 	})
@@ -115,7 +115,7 @@ func TestCreateUser(t *testing.T) {
 		response map[string]string
 	}
 	type payload struct {
-		Login    string
+		Email    string
 		Password string
 	}
 	type request struct {
@@ -133,7 +133,7 @@ func TestCreateUser(t *testing.T) {
 			name:   "valid case",
 			method: "POST",
 			payload: payload{
-				Login:    "validLogin",
+				Email:    "validLogin",
 				Password: "validPassword",
 			},
 			want: want{
@@ -146,7 +146,7 @@ func TestCreateUser(t *testing.T) {
 			name:   "invalid login",
 			method: "POST",
 			payload: payload{
-				Login:    "invl",
+				Email:    "invl",
 				Password: "123qwe",
 			},
 			want: want{
@@ -161,7 +161,7 @@ func TestCreateUser(t *testing.T) {
 			name:   "invalid password",
 			method: "POST",
 			payload: payload{
-				Login:    "invl12",
+				Email:    "invl12",
 				Password: "123",
 			},
 			want: want{
@@ -176,7 +176,7 @@ func TestCreateUser(t *testing.T) {
 			name:   "invalid method",
 			method: "GET",
 			payload: payload{
-				Login:    "invl12",
+				Email:    "invl12",
 				Password: "123123",
 			},
 			want: want{
@@ -191,7 +191,7 @@ func TestCreateUser(t *testing.T) {
 			name:   "user exist",
 			method: "POST",
 			payload: payload{
-				Login:    "validLogin",
+				Email:    "validLogin",
 				Password: "123123",
 			},
 			want: want{
@@ -213,7 +213,7 @@ func TestCreateUser(t *testing.T) {
 			data := new(bytes.Buffer)
 			err := json.NewEncoder(data).Encode(request{
 				model.User{
-					Login:       tcase.payload.Login,
+					Email:       tcase.payload.Email,
 					Password:    tcase.payload.Password,
 					Fingerprint: "test-fingerprint",
 				},
@@ -256,7 +256,7 @@ func TestAuthUser(t *testing.T) {
 		checkOnlyKeys bool
 	}
 	type payload struct {
-		Login       string
+		Email       string
 		Password    string
 		Fingerprint string
 	}
@@ -275,7 +275,7 @@ func TestAuthUser(t *testing.T) {
 			name:   "valid case",
 			method: "POST",
 			payload: payload{
-				Login:       "existUser",
+				Email:       "existUser",
 				Password:    "password",
 				Fingerprint: "fingerprint",
 			},
@@ -293,7 +293,7 @@ func TestAuthUser(t *testing.T) {
 			name:   "valid case anther fingerprint",
 			method: "POST",
 			payload: payload{
-				Login:       "existUser",
+				Email:       "existUser",
 				Password:    "password",
 				Fingerprint: "fingerprint2",
 			},
@@ -311,7 +311,7 @@ func TestAuthUser(t *testing.T) {
 			name:   "invalid login",
 			method: "POST",
 			payload: payload{
-				Login:       "invl",
+				Email:       "invl",
 				Password:    "password",
 				Fingerprint: "fingerprint",
 			},
@@ -328,7 +328,7 @@ func TestAuthUser(t *testing.T) {
 			name:   "invalid password",
 			method: "POST",
 			payload: payload{
-				Login:       "existUser",
+				Email:       "existUser",
 				Password:    "invalidpass",
 				Fingerprint: "fingerprint",
 			},
@@ -345,7 +345,7 @@ func TestAuthUser(t *testing.T) {
 			name:   "invalid method",
 			method: "GET",
 			payload: payload{
-				Login:       "existUser",
+				Email:       "existUser",
 				Password:    "password",
 				Fingerprint: "fingerprint",
 			},
@@ -371,7 +371,7 @@ func TestAuthUser(t *testing.T) {
 			data := new(bytes.Buffer)
 			err := json.NewEncoder(data).Encode(request{
 				model.User{
-					Login:       tcase.payload.Login,
+					Email:       tcase.payload.Email,
 					Password:    tcase.payload.Password,
 					Fingerprint: tcase.payload.Fingerprint,
 				},
@@ -506,7 +506,7 @@ func TestRefreshToken(t *testing.T) {
 func TestAddGroup(t *testing.T) {
 
 	type request struct {
-		Login string `json:"login"`
+		Email string `json:"email"`
 		Name  string `json:"name"`
 	}
 	type response struct {
@@ -525,7 +525,7 @@ func TestAddGroup(t *testing.T) {
 			name:   "valid case",
 			method: "POST",
 			payload: request{
-				Login: "existUser",
+				Email: "existUser",
 				Name:  "testGroup",
 			},
 			want: response{
@@ -545,7 +545,7 @@ func TestAddGroup(t *testing.T) {
 		t.Run(tcase.name, func(t *testing.T) {
 			data := new(bytes.Buffer)
 			err := json.NewEncoder(data).Encode(request{
-				Login: tcase.payload.Login,
+				Email: tcase.payload.Email,
 				Name:  tcase.payload.Name,
 			})
 			if err != nil {

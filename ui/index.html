@@ -39,6 +39,9 @@
         </form>
     </div>
 
+    <strong>Выйти из аккаунта</strong>
+    <button onclick="getGroupList()">Получить список групп</button>
+
     <button id="btn" onclick="update()">Обновить токены</button>
 
 
@@ -109,6 +112,7 @@
 
         <strong>Получить список групп</strong>
         <button onclick="getGroupList()">Получить список групп</button>
+
     </div>
 
 </body>
@@ -137,13 +141,15 @@
                 'Content-Type': 'application/json',
             },
             data: {
-                login: name,
+                email: name,
                 password: password,
                 fingerprint: "this fingerprint"
             }
         })
-            .then(function (response) {
-                console.log(response);
+            .then(res => {
+                sessionStorage.setItem('accessToken', res.data.accessToken)
+                sessionStorage.setItem('refreshToken', res.data.refreshToken)
+                console.log("SUCSSES, tokens:" + res.data.accessToken + " / " + res.data.refreshToken)
             })
             .catch(function (error) {
                 console.log(error);
@@ -168,7 +174,7 @@
                 'Content-Type': 'application/json',
             },
             data: {
-                login: name2,
+                email: name2,
                 password: password2,
                 fingerprint: "this fingerprint5"
             }
@@ -182,6 +188,36 @@
                 console.log(error);
             });
     })
+
+    //logout
+    function logOut() {
+
+        axios.post('http://localhost:8080/refresh-token', {
+            mode: 'no-cors',
+            headers: {
+                'Access-Control-Allow-Origin': '*',
+                Accept: 'application/json',
+                'Content-Type': 'application/json',
+            },
+            data: {
+                refreshToken: refToken,
+                fingerprint: "this fingerprint"
+            }
+        }).then(res => {
+            sessionStorage.setItem('accessToken', res.data.accessToken)
+            sessionStorage.setItem('refreshToken', res.data.refreshToken)
+            console.log("SUCSSES, tokens:" + res.data.accessToken + " / " + res.data.refreshToken)
+
+            const tokenParts = res.data.accessToken.split('.'); // Разделяем токен на части
+            const decodedHeader = JSON.parse(atob(tokenParts[0])); // Декодируем заголовок
+            const decodedPayload = JSON.parse(atob(tokenParts[1])); // Декодируем полезную нагрузку
+
+            const D = new Date(1000 * decodedPayload.exp); // объект даты
+            D.toISOString()  // "2021-08-13T05:51:22.999Z"
+
+            console.log(D)
+        })
+    }
 
     // update token
     function update() {

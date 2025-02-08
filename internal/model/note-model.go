@@ -8,7 +8,7 @@ type NoteList []struct {
 
 type Note struct {
 	Id         int    `json:"id"`
-	User_login string `json:"user_login"`
+	User_email string `json:"user_email"`
 	Title      string `json:"title"`
 	Text       string `json:"text"`
 	Group_id   int    `json:"group_id"`
@@ -22,5 +22,5 @@ type GroupList []struct {
 type Group struct {
 	Id         int    `json:"id"`
 	Name       string `json:"name"`
-	User_login string `json:"user_login"`
+	User_email string `json:"user_email"`
 }

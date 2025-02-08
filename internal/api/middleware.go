@@ -77,7 +77,7 @@ func middlewareAuth() Middleware {
 				return
 			}
 
-			login, err := service.VerifyAccessToken(accessTokenArr[1])
+			email, err := service.VerifyAccessToken(accessTokenArr[1])
 			if err != nil {
 				if err == service.ErrTokenInvalid {
 					apiError(w, r, http.StatusUnauthorized, err)
@@ -97,7 +97,7 @@ func middlewareAuth() Middleware {
 				}
 			}
 
-			m["login"] = login
+			m["email"] = email
 
 			ctx := context.WithValue(r.Context(), ctxKey{}, m)
 
