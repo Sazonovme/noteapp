@@ -70,39 +70,6 @@ func (r *NotesRepository) UpdateGroup(id int, email string, newNameGroup string)
 	return nil
 }
 
-func (r *NotesRepository) GetGroupList(email string) (model.GroupList, error) {
-	var list model.GroupList
-
-	res, err := r.db.Query("SELECT id, name FROM groups WHERE user_email = $1", email)
-	if err != nil {
-		if err == sql.ErrNoRows {
-			return list, nil
-		}
-		return list, err
-	}
-	defer res.Close()
-
-	for res.Next() {
-		var id int
-		var name string
-		if err := res.Scan(&id, &name); err != nil {
-			return list, err
-		}
-		list = append(list, struct {
-			Id   int    "json:\"id\""
-			Name string "json:\"name\""
-		}{
-			id,
-			name,
-		})
-	}
-
-	if err = res.Err(); err != nil {
-		return list, err
-	}
-	return list, nil
-}
-
 // NOTES
 
 func (r *NotesRepository) AddNote(email string, title string, text string, group_id int) error {

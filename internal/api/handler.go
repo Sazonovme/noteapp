@@ -36,7 +36,6 @@ type NotesService interface {
 	AddGroup(email string, nameGroup string) error
 	DelGroup(id int, email string) error
 	UpdateGroup(id int, email string, newNameGroup string) error
-	GetGroupList(email string) (model.GroupList, error)
 	// NOTES
 	AddNote(email string, title string, text string, group_id int) error
 	DelNote(id int, email string) error
@@ -109,13 +108,6 @@ func (h *Handler) InitHandler() *http.ServeMux {
 
 	router.HandleFunc("/updateGroup", chainMiddleware(
 		h.updateGroup,
-		middlewareAuth(),
-		middlewareNoCors(),
-		middlewareLogIn()),
-	)
-
-	router.HandleFunc("/getGroupList", chainMiddleware(
-		h.getGroupList,
 		middlewareAuth(),
 		middlewareNoCors(),
 		middlewareLogIn()),
@@ -460,42 +452,6 @@ func (h *Handler) updateGroup(w http.ResponseWriter, r *http.Request) {
 
 	logger.NewLog("api - updateGroup()", 5, nil,
 		"OUT - Group updated "+time.Now().Format("02.01 15:04:05"), nil)
-}
-
-func (h *Handler) getGroupList(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodGet {
-		apiError(w, r, http.StatusMethodNotAllowed, errMethodNotAllowed)
-		return
-	}
-
-	data, ok := r.Context().Value(ctxKey{}).(map[string]string)
-	if !ok {
-		logger.NewLog("api - getGroupList()", 2, nil, "Filed to recive contex data", nil)
-		apiError(w, r, http.StatusInternalServerError, nil)
-		return
-	}
-
-	email, ok := data["email"]
-	if !(ok && email != "") {
-		logger.NewLog("api - getGroupList()", 2, nil, "Field email not exist in r.Context()", "email = "+email)
-		apiError(w, r, http.StatusBadRequest, errRequiredFieldsMissing)
-		return
-	}
-
-	gList, err := h.NotesService.GetGroupList(email)
-	if err != nil {
-		apiError(w, r, http.StatusInternalServerError, nil)
-		return
-	}
-
-	if err := json.NewEncoder(w).Encode(gList); err != nil {
-		logger.NewLog("api - getGroupList()", 2, err, "Filed to encode r.Body", nil)
-		apiError(w, r, http.StatusInternalServerError, nil)
-		return
-	}
-
-	logger.NewLog("api - getGroupList()", 5, nil,
-		"OUT - List geted "+time.Now().Format("02.01 15:04:05"), nil)
 }
 
 // NOTES

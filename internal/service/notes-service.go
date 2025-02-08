@@ -11,7 +11,6 @@ type NotesRepository interface {
 	AddGroup(login string, nameGroup string) error
 	DelGroup(id int, login string) error
 	UpdateGroup(id int, login string, newNameGroup string) error
-	GetGroupList(login string) (model.GroupList, error)
 	// NOTES
 	AddNote(login string, title string, text string, group_id int) error
 	DelNote(id int, login string) error
@@ -54,15 +53,6 @@ func (s *NotesService) UpdateGroup(id int, email string, newNameGroup string) er
 		logger.NewLog("service - UpdateGroup()", 2, err, "Filed to update group in repository", nil)
 	}
 	return err
-}
-
-func (s *NotesService) GetGroupList(email string) (model.GroupList, error) {
-	groupList, err := s.repository.GetGroupList(email)
-	if err != nil {
-		logger.NewLog("service - GetGroupList()", 2, err, "Filed to get group list in repository", nil)
-		return groupList, err
-	}
-	return groupList, nil
 }
 
 // NOTES
