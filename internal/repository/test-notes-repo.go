@@ -65,39 +65,6 @@ func (r *TestNotesRepository) UpdateGroup(id int, email string, newNameGroup str
 	return nil
 }
 
-func (r *TestNotesRepository) GetGroupList(email string) (model.GroupList, error) {
-	var list model.GroupList
-
-	res, err := r.db.Query("SELECT id, name FROM test_groups WHERE user_email = $1", email)
-	if err != nil {
-		if err == sql.ErrNoRows {
-			return list, nil
-		}
-		return list, err
-	}
-	defer res.Close()
-
-	for res.Next() {
-		var id int
-		var name string
-		if err := res.Scan(&id, &name); err != nil {
-			return list, err
-		}
-		list = append(list, struct {
-			Id   int    "json:\"id\""
-			Name string "json:\"name\""
-		}{
-			id,
-			name,
-		})
-	}
-
-	if err = res.Err(); err != nil {
-		return list, err
-	}
-	return list, nil
-}
-
 // NOTES
 
 func (r *TestNotesRepository) AddNote(email string, title string, text string, group_id int) error {
@@ -150,53 +117,54 @@ func (r *TestNotesRepository) UpdateNote(id int, email string, title string, tex
 	return nil
 }
 
-func (r *TestNotesRepository) GetNotesList(email string, group_id int) (model.NoteList, error) {
-	var res *sql.Rows
-	var err error
-	var list model.NoteList
+func (r *TestNotesRepository) GetNotesList(email string) (model.NoteList, error) {
+	// var res *sql.Rows
+	// var err error
+	// var list model.NoteList
 
-	if group_id != 0 {
-		res, err = r.db.Query(
-			"SELECT id, title, group_id FROM test_notes WHERE user_email = $1 AND group_id = $2",
-			email,
-			group_id,
-		)
-	} else {
-		res, err = r.db.Query(
-			"SELECT id, title, COALESCE(group_id,0) as group_id FROM test_notes WHERE user_email = $1",
-			email,
-		)
-	}
-	if err != nil {
-		if err == sql.ErrNoRows {
-			return list, nil
-		}
-		return list, err
-	}
-	defer res.Close()
+	// if group_id != 0 {
+	// 	res, err = r.db.Query(
+	// 		"SELECT id, title, group_id FROM test_notes WHERE user_email = $1 AND group_id = $2",
+	// 		email,
+	// 		group_id,
+	// 	)
+	// } else {
+	// 	res, err = r.db.Query(
+	// 		"SELECT id, title, COALESCE(group_id,0) as group_id FROM test_notes WHERE user_email = $1",
+	// 		email,
+	// 	)
+	// }
+	// if err != nil {
+	// 	if err == sql.ErrNoRows {
+	// 		return list, nil
+	// 	}
+	// 	return list, err
+	// }
+	// defer res.Close()
 
-	for res.Next() {
-		var id int
-		var title string
-		var group_id int
-		if err := res.Scan(&id, &title, &group_id); err != nil {
-			return list, err
-		}
-		list = append(list, struct {
-			Id       int    `json:"id"`
-			Title    string `json:"title"`
-			Group_id int    `json:"group_id"`
-		}{
-			id,
-			title,
-			group_id,
-		})
-	}
+	// for res.Next() {
+	// 	var id int
+	// 	var title string
+	// 	var group_id int
+	// 	if err := res.Scan(&id, &title, &group_id); err != nil {
+	// 		return list, err
+	// 	}
+	// 	list = append(list, struct {
+	// 		Id       int    `json:"id"`
+	// 		Title    string `json:"title"`
+	// 		Group_id int    `json:"group_id"`
+	// 	}{
+	// 		id,
+	// 		title,
+	// 		group_id,
+	// 	})
+	// }
 
-	if err = res.Err(); err != nil {
-		return list, err
-	}
-	return list, nil
+	// if err = res.Err(); err != nil {
+	// 	return list, err
+	// }
+	// return list, nil
+	return model.NoteList{}, nil
 }
 
 func (r *TestNotesRepository) GetNote(id int, email string) (model.Note, error) {

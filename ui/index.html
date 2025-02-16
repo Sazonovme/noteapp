@@ -388,9 +388,7 @@
                 accessToken: accessToken,
             })
 
-        URLstr = 'http://localhost:8080/getNotesList?group_id=' + id
-
-        axios.get(URLstr, {
+        axios.get('http://localhost:8080/getNotesList', {
             mode: 'no-cors',
             headers: {
                 'Access-Control-Allow-Origin': '*',

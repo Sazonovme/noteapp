@@ -15,7 +15,7 @@ type NotesRepository interface {
 	AddNote(login string, title string, text string, group_id int) error
 	DelNote(id int, login string) error
 	UpdateNote(id int, login string, title string, text string, group_id int) error
-	GetNotesList(login string, group_id int) (model.NoteList, error)
+	GetNotesList(email string) (model.NoteList, error)
 	GetNote(id int, login string) (model.Note, error)
 }
 
@@ -100,15 +100,10 @@ func (s *NotesService) UpdateNote(id int, email string, title string, text strin
 	return err
 }
 
-func (s *NotesService) GetNotesList(email string, group_id int) (model.NoteList, error) {
-	list, err := s.repository.GetNotesList(email, group_id)
+func (s *NotesService) GetNotesList(email string) (model.NoteList, error) {
+	list, err := s.repository.GetNotesList(email)
 	if err != nil {
-		gID := strconv.Itoa(group_id)
-		m := map[string]string{
-			"email":    email,
-			"group_id": gID,
-		}
-		logger.NewLog("service - GetNotesList()", 2, err, "Filed get notes list in repository", m)
+		logger.NewLog("service - GetNotesList()", 2, err, "Filed get notes list in repository, email = "+email, nil)
 	}
 	return list, err
 }

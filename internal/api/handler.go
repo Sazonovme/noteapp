@@ -40,7 +40,7 @@ type NotesService interface {
 	AddNote(email string, title string, text string, group_id int) error
 	DelNote(id int, email string) error
 	UpdateNote(id int, email string, title string, text string, group_id int) error
-	GetNotesList(email string, group_id int) (model.NoteList, error)
+	GetNotesList(email string) (model.NoteList, error)
 	GetNote(id int, email string) (model.Note, error)
 }
 
@@ -622,21 +622,7 @@ func (h *Handler) getNotesList(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	group_id_string := r.URL.Query().Get("group_id")
-	var group_id int
-	var err error
-	if group_id_string == "" {
-		group_id = 0
-	} else {
-		group_id, err = strconv.Atoi(group_id_string)
-		if err != nil {
-			logger.NewLog("api - getNotesList()", 2, err, "Filed to convert string to int", "string = "+group_id_string)
-			apiError(w, r, http.StatusInternalServerError, nil)
-			return
-		}
-	}
-
-	list, err := h.NotesService.GetNotesList(email, group_id)
+	list, err := h.NotesService.GetNotesList(email)
 	if err != nil {
 		apiError(w, r, http.StatusInternalServerError, nil)
 		return

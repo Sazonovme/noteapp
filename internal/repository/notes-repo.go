@@ -122,53 +122,132 @@ func (r *NotesRepository) UpdateNote(id int, email string, title string, text st
 	return nil
 }
 
-func (r *NotesRepository) GetNotesList(email string, group_id int) (model.NoteList, error) {
+func (r *NotesRepository) GetNotesList(email string) (model.NoteList, error) {
 	var res *sql.Rows
-	var err error
-	var list model.NoteList
 
-	if group_id != 0 {
-		res, err = r.db.Query(
-			"SELECT id, title, group_id FROM notes WHERE user_email = $1 AND group_id = $2",
-			email,
-			group_id,
+	res, err := r.db.Query(
+		`WITH RECURSIVE r AS (
+			SELECT id, pid, name, 1 AS level
+			FROM groups
+			WHERE user_email = $1 AND pid IS NULL 
+
+			UNION
+
+			SELECT groups.id, groups.pid, groups.name, r.level + 1 AS level
+			FROM groups
+				JOIN r
+					ON groups.pid = r.id
 		)
-	} else {
-		res, err = r.db.Query(
-			"SELECT id, title, COALESCE(group_id,0) as group_id FROM notes WHERE user_email = $1",
-			email,
-		)
-	}
+		SELECT
+			COALESCE(r.id, 0) AS group_id,
+			COALESCE(r.name, '') AS group_name,
+			COALESCE(r.pid, 0) AS group_pid,
+			COALESCE(r.level, 1) AS group_level,
+			COALESCE(notes.id, 0) AS notes_id,
+			COALESCE(notes.title, '') AS notes_title,
+			COALESCE(notes.text, '') AS notes_text
+		FROM r 
+			FULL OUTER JOIN notes
+				ON notes.group_id = r.id
+		ORDER BY group_level ASC, group_pid ASC, group_id ASC;`,
+		email,
+	)
+
 	if err != nil {
 		if err == sql.ErrNoRows {
-			return list, nil
+			return model.NoteList{}, nil
 		}
-		return list, err
+		return model.NoteList{}, err
 	}
 	defer res.Close()
 
+	resRow := struct {
+		group_id    int
+		group_name  string
+		group_pid   int
+		group_level int
+		notes_id    int
+		notes_title string
+		notes_text  string
+	}{}
+
+	gPid := 0
+	gId := -1
+
+	curGrp := model.GroupElement{}
+	groups := []model.GroupElement{}
+	groupsLink := &groups
+	notes := []model.NoteElement{}
+
+	mGroups := map[int]model.GroupElement{}
+	defer clear(mGroups)
+
 	for res.Next() {
-		var id int
-		var title string
-		var group_id int
-		if err := res.Scan(&id, &title, &group_id); err != nil {
-			return list, err
+
+		if err := res.Scan(
+			&resRow.group_id,
+			&resRow.group_name,
+			&resRow.group_pid,
+			&resRow.group_level,
+			&resRow.notes_id,
+			&resRow.notes_title,
+			&resRow.notes_text,
+		); err != nil {
+			return model.NoteList{}, err
 		}
-		list = append(list, struct {
-			Id       int    `json:"id"`
-			Title    string `json:"title"`
-			Group_id int    `json:"group_id"`
-		}{
-			id,
-			title,
-			group_id,
-		})
+
+		if resRow.group_id == 0 {
+			notes = append(notes, model.NoteElement{
+				Id:    resRow.notes_id,
+				Title: resRow.notes_title,
+				Text:  resRow.notes_text,
+			})
+			continue
+		} else {
+			if gId != resRow.group_id {
+
+				if gId != -1 {
+					*groupsLink = append(*groupsLink, curGrp)
+
+					mGroups[curGrp.Id] = curGrp
+				}
+
+				if gPid != resRow.group_pid {
+					groupElement, ok := mGroups[resRow.group_pid]
+					if !ok {
+						return model.NoteList{}, errors.New("not found group in map")
+					}
+					groupsLink = groupElement.Groups
+				}
+
+				curGrp = model.GroupElement{}
+				curGrp.Id = resRow.group_id
+				curGrp.Name = resRow.group_name
+				curGrp.Groups = &[]model.GroupElement{}
+				curGrp.Notes = []model.NoteElement{}
+
+				gId = resRow.group_id
+				gPid = resRow.group_pid
+			}
+
+			if resRow.notes_id != 0 {
+				curGrp.Notes = append(curGrp.Notes, model.NoteElement{
+					Id:    resRow.notes_id,
+					Title: resRow.notes_title,
+					Text:  resRow.notes_text,
+				})
+			}
+		}
 	}
 
 	if err = res.Err(); err != nil {
-		return list, err
+		return model.NoteList{}, err
 	}
-	return list, nil
+
+	return model.NoteList{
+		Groups: groups,
+		Notes:  notes,
+	}, nil
 }
 
 func (r *NotesRepository) GetNote(id int, email string) (model.Note, error) {

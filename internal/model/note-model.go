@@ -1,9 +1,21 @@
 package model
 
-type NoteList []struct {
-	Id       int    `json:"id"`
-	Title    string `json:"title"`
-	Group_id int    `json:"group_id"`
+type NoteElement struct {
+	Id    int    `json:"note_id"`
+	Title string `json:"note_title"`
+	Text  string `json:"note_text"`
+}
+
+type GroupElement struct {
+	Id     int             `json:"group_id"`
+	Name   string          `json:"group_name"`
+	Groups *[]GroupElement `json:"groups"`
+	Notes  []NoteElement   `json:"notes"`
+}
+
+type NoteList struct {
+	Groups []GroupElement `json:"groups"`
+	Notes  []NoteElement  `json:"notes"`
 }
 
 type Note struct {
@@ -12,11 +24,6 @@ type Note struct {
 	Title      string `json:"title"`
 	Text       string `json:"text"`
 	Group_id   int    `json:"group_id"`
-}
-
-type GroupList []struct {
-	Id   int    `json:"id"`
-	Name string `json:"name"`
 }
 
 type Group struct {
