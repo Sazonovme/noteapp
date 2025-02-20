@@ -373,9 +373,10 @@ func (h *Handler) delGroup(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	id_string, ok1 := data["id"]
-	email, ok2 := data["email"]
-	if !(ok1 && ok2 && email != "" && id_string != "") {
+	//id_string, ok1 := data["id"]
+	id_string := r.URL.Query().Get("id")
+	email, ok1 := data["email"]
+	if !(ok1 && email != "" && id_string != "") {
 		logger.NewLog("api - delGroup()", 2, nil, "Required fields are missing in r.Context",
 			"email = "+email+" id = "+id_string)
 		apiError(w, r, http.StatusBadRequest, errRequiredFieldsMissing)
