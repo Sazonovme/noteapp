@@ -6,6 +6,3 @@ ALTER TABLE groups
 
 ALTER TABLE notes 
     RENAME COLUMN user_email TO user_login;
-
-ALTER TABLE refreshsessions 
-    RENAME COLUMN user_email TO user_login;
