@@ -3,7 +3,6 @@ package api
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
 	"net/http"
 	"noteapp/internal/model"
 	"noteapp/internal/repository"
@@ -171,8 +170,6 @@ func (h *Handler) createUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	fmt.Println(d.User)
-
 	err = h.UserService.CreateUser(&d.User)
 	if err == service.ErrUserExist ||
 		err == model.ErrValidationPassword ||
@@ -270,7 +267,7 @@ func (h *Handler) refreshToken(w http.ResponseWriter, r *http.Request) {
 
 	reqData := &struct {
 		Data struct {
-			RefreshToken string `json:"refreshToken"`
+			RefreshToken string `json:"refresh-token"`
 			Fingerprint  string `json:"fingerprint"`
 		} `json:"data"`
 	}{}
