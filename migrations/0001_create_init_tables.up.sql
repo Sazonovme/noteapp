@@ -4,14 +4,14 @@ CREATE TABLE users(
     password VARCHAR(500) NOT NULL
 );
 
-CREATE TABLE refreshsessions(
-    id SERIAL PRIMARY KEY,
-    user_login VARCHAR(100) NOT NULL REFERENCES users(login) ON UPDATE CASCADE ON DELETE CASCADE,
-    fingerprint VARCHAR(300) NOT NULL,
-    refreshtoken VARCHAR(300) NOT NULL,
-    exp TIMESTAMP NOT NULL,
-    iat TIMESTAMP NOT NULL
-);
+-- CREATE TABLE refreshsessions(
+--     id SERIAL PRIMARY KEY,
+--     user_login VARCHAR(100) NOT NULL REFERENCES users(login) ON UPDATE CASCADE ON DELETE CASCADE,
+--     fingerprint VARCHAR(300) NOT NULL,
+--     refreshtoken VARCHAR(300) NOT NULL,
+--     exp TIMESTAMP NOT NULL,
+--     iat TIMESTAMP NOT NULL
+-- );
 
 CREATE TABLE groups(
     id SERIAL PRIMARY KEY,

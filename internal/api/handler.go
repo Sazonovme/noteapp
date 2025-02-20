@@ -3,6 +3,7 @@ package api
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net/http"
 	"noteapp/internal/model"
 	"noteapp/internal/repository"
@@ -25,11 +26,6 @@ type UserService interface {
 	FindByLogin(string) (*model.User, error)
 }
 
-type AuthService interface {
-	MakeRefreshSession(string, string) (*service.RequestTokenData, error)
-	UpdateTokens(oldRefreshToken string, fingerprint string) (*service.RequestTokenData, error)
-}
-
 type NotesService interface {
 	// GROUPS
 	AddGroup(email string, nameGroup string) error
@@ -45,14 +41,12 @@ type NotesService interface {
 
 type Handler struct {
 	UserService  UserService
-	AuthService  AuthService
 	NotesService NotesService
 }
 
-func NewHandler(userService UserService, authService AuthService, notesService NotesService) *Handler {
+func NewHandler(userService UserService, notesService NotesService) *Handler {
 	return &Handler{
 		UserService:  userService,
-		AuthService:  authService,
 		NotesService: notesService,
 	}
 }
@@ -185,7 +179,7 @@ func (h *Handler) createUser(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// AT ONCE AUTH
-	refSession, err := h.AuthService.MakeRefreshSession(d.User.Email, d.User.Fingerprint)
+	refSession, err := service.MakeRefreshSession(d.User.Email, d.User.Fingerprint)
 	if err != nil {
 		apiError(w, r, http.StatusInternalServerError, nil)
 		return
@@ -240,7 +234,7 @@ func (h *Handler) authUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	refSession, err := h.AuthService.MakeRefreshSession(u.Email, d.User.Fingerprint)
+	refSession, err := service.MakeRefreshSession(u.Email, d.User.Fingerprint)
 	if err != nil {
 		apiError(w, r, http.StatusInternalServerError, nil)
 		return
@@ -267,7 +261,7 @@ func (h *Handler) refreshToken(w http.ResponseWriter, r *http.Request) {
 
 	reqData := &struct {
 		Data struct {
-			RefreshToken string `json:"refresh-token"`
+			RefreshToken string `json:"refreshToken"`
 			Fingerprint  string `json:"fingerprint"`
 		} `json:"data"`
 	}{}
@@ -277,7 +271,9 @@ func (h *Handler) refreshToken(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	refSession, err := h.AuthService.UpdateTokens(reqData.Data.RefreshToken, reqData.Data.Fingerprint)
+	fmt.Println(reqData.Data.RefreshToken)
+
+	refSession, err := service.UpdateTokens(reqData.Data.RefreshToken, reqData.Data.Fingerprint)
 	if err != nil {
 		apiError(w, r, http.StatusInternalServerError, nil)
 		return
@@ -313,7 +309,7 @@ func (h *Handler) logOut(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	refSession, err := h.AuthService.UpdateTokens(reqData.Data.RefreshToken, reqData.Data.Fingerprint)
+	refSession, err := service.UpdateTokens(reqData.Data.RefreshToken, reqData.Data.Fingerprint)
 	if err != nil {
 		apiError(w, r, http.StatusInternalServerError, nil)
 		return

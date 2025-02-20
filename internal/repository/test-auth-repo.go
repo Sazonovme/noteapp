@@ -17,10 +17,10 @@ func (r *TestAuthRepository) DeleteRefreshSession(email string, fingerprint stri
 	return err
 }
 
-func (r *TestAuthRepository) WriteRefreshSession(s *RefreshSession) error {
-	_, err := r.db.Exec("INSERT INTO test_refreshSessions(user_email, fingerprint, refreshtoken, exp, iat) VALUES($1, $2, $3, $4, $5)", s.Email, s.Fingerprint, s.RefreshToken, s.Exp, s.Iat)
-	return err
-}
+// func (r *TestAuthRepository) WriteRefreshSession(s *RefreshSession) error {
+// 	_, err := r.db.Exec("INSERT INTO test_refreshSessions(user_email, fingerprint, refreshtoken, exp, iat) VALUES($1, $2, $3, $4, $5)", s.Email, s.Fingerprint, s.RefreshToken, s.Exp, s.Iat)
+// 	return err
+// }
 
 func (r *TestAuthRepository) RefreshSessionExist(rToken string, fingerprint string) error {
 	_, err := r.db.Query("SELECT email, fingerprint FROM test_refreshSessions WHERE refreshtoken = $1 AND fingerprint = $2", rToken, fingerprint)

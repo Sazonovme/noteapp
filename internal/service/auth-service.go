@@ -2,7 +2,6 @@ package service
 
 import (
 	"errors"
-	"noteapp/internal/repository"
 	"noteapp/pkg/logger"
 	"time"
 
@@ -20,53 +19,19 @@ type RequestTokenData struct {
 	RefreshToken string `json:"refreshToken"`
 }
 
-type AuthRepository interface {
-	DeleteRefreshSession(string, string) error
-	WriteRefreshSession(*repository.RefreshSession) error
-}
-
-type AuthService struct {
-	repository AuthRepository
-}
-
-func NewAuthService(r AuthRepository) *AuthService {
-	return &AuthService{
-		repository: r,
-	}
-}
-
-func (s *AuthService) MakeRefreshSession(email string, fingerprint string) (*RequestTokenData, error) {
-
-	err := s.repository.DeleteRefreshSession(email, fingerprint)
-	if err != nil {
-		logger.NewLog("service - MakeRefreshSession()", 2, err, "Filed to delete session in repository", "email: "+email+", fingerprint: "+fingerprint)
-		return nil, err
-	}
+func MakeRefreshSession(email string, fingerprint string) (*RequestTokenData, error) {
 
 	expAccess := time.Now().Add(15 * time.Minute)
 	aToken, err := CreateJWTToken(email, expAccess, secretKeyAccess)
 	if err != nil {
-		logger.NewLog("service - MakeRefreshSession()", 2, err, "Filed to Create JWT Token (Access)", "login: "+email+", expAccess: "+expAccess.Format("2006-01-02 15:04"))
+		logger.NewLog("service - MakeRefreshSession()", 2, err, "Filed to Create JWT Token (Access)", "email: "+email+", expAccess: "+expAccess.Format("2006-01-02 15:04"))
 		return nil, err
 	}
 
 	expRefresh := time.Now().Add(15 * 24 * time.Hour)
 	rToken, err := CreateJWTToken(email, expRefresh, secretKeyRefresh)
 	if err != nil {
-		logger.NewLog("service - MakeRefreshSession()", 2, err, "Filed to Create JWT Token (Refresh)", "login: "+email+", expRefresh: "+expRefresh.Format("2006-01-02 15:04"))
-		return nil, err
-	}
-
-	session := repository.RefreshSession{
-		Email:        email,
-		RefreshToken: rToken,
-		Exp:          expRefresh,
-		Iat:          time.Now(),
-		Fingerprint:  fingerprint,
-	}
-	err = s.repository.WriteRefreshSession(&session)
-	if err != nil {
-		logger.NewLog("service - MakeRefreshSession()", 2, err, "Filed to write refresh session in repository", session)
+		logger.NewLog("service - MakeRefreshSession()", 2, err, "Filed to Create JWT Token (Refresh)", "email: "+email+", expRefresh: "+expRefresh.Format("2006-01-02 15:04"))
 		return nil, err
 	}
 
@@ -76,20 +41,14 @@ func (s *AuthService) MakeRefreshSession(email string, fingerprint string) (*Req
 	}, nil
 }
 
-func (s *AuthService) UpdateTokens(oldRefreshToken string, fingerprint string) (*RequestTokenData, error) {
+func UpdateTokens(oldRefreshToken string, fingerprint string) (*RequestTokenData, error) {
 	email, err := VerifyToken(oldRefreshToken, secretKeyRefresh)
 	if err != nil {
 		logger.NewLog("service - UpdateTokens()", 5, err, "Filed to verify token", nil)
 		return nil, err
 	}
 
-	err = s.repository.DeleteRefreshSession(email, fingerprint)
-	if err != nil {
-		logger.NewLog("service - UpdateTokens()", 2, err, "Filed delete refresh session in repository", "email: "+email+", fingerprint: "+fingerprint)
-		return nil, err
-	}
-
-	refreshSesssion, err := s.MakeRefreshSession(email, fingerprint)
+	refreshSesssion, err := MakeRefreshSession(email, fingerprint)
 	if err != nil {
 		logger.NewLog("service - UpdateTokens()", 2, err, "Filed to make refresh session", "email: "+email+", fingerprint: "+fingerprint)
 		return nil, err
@@ -97,6 +56,10 @@ func (s *AuthService) UpdateTokens(oldRefreshToken string, fingerprint string) (
 
 	return refreshSesssion, nil
 }
+
+// func (s *AuthService) LogOut(email string, fingerprint string) error {
+// 	return
+// }
 
 func CreateJWTToken(email string, exp time.Time, secretKey string) (string, error) {
 	claims := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.RegisteredClaims{
