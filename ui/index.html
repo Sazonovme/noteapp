@@ -441,7 +441,7 @@
                 accessToken: accessToken,
             })
 
-        axios.delete('http://localhost:8080/delGroup', {
+        axios.delete('http://localhost:8080/delGroup?id=' + id, {
             mode: 'no-cors',
             headers: {
                 'Access-Control-Allow-Origin': '*',
