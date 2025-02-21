@@ -8,15 +8,15 @@ import (
 
 type NotesRepository interface {
 	// GROUPS
-	AddGroup(login string, nameGroup string) error
-	DelGroup(id int, login string) error
-	UpdateGroup(id int, login string, newNameGroup string) error
+	AddGroup(email string, nameGroup string, pid int) error
+	DelGroup(id int, email string) error
+	UpdateGroup(id int, email string, newNameGroup string) error
 	// NOTES
-	AddNote(login string, title string, text string, group_id int) error
-	DelNote(id int, login string) error
-	UpdateNote(id int, login string, title string, text string, group_id int) error
+	AddNote(email string, title string, text string, group_id int) error
+	DelNote(id int, email string) error
+	UpdateNote(id int, email string, title string, text string, group_id int) error
 	GetNotesList(email string) (model.NoteList, error)
-	GetNote(id int, login string) (model.Note, error)
+	GetNote(id int, email string) (model.Note, error)
 }
 
 type NotesService struct {
@@ -31,8 +31,9 @@ func NewNotesService(repo NotesRepository) *NotesService {
 
 // GROUPS
 
-func (s *NotesService) AddGroup(email string, nameGroup string) error {
-	err := s.repository.AddGroup(email, nameGroup)
+func (s *NotesService) AddGroup(email string, nameGroup string, pid int) error {
+
+	err := s.repository.AddGroup(email, nameGroup, pid)
 	if err != nil {
 		logger.NewLog("service - AddGroup()", 2, err, "Filed to add group in repository", nil)
 	}

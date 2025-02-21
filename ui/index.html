@@ -93,6 +93,8 @@
         <strong>Добавить группу</strong>
         <label for="add_group_name">Имя группы</label>
         <input type="text" name="add_group_name">
+        <label for="add_group_pid">Ид родителя</label>
+        <input type="text" name="add_group_pid">
         <button onclick="addGroup()">Добавить группу</button>
         <hr>
 
@@ -406,17 +408,21 @@
     function addGroup() {
 
         name = document.getElementsByName("add_group_name")[0].value
-
+        pid = document.getElementsByName("add_group_pid")[0].value
+        
         accessToken = sessionStorage.getItem('accessToken')
         console.log(
             {
                 name: name,
+                pid: pid,
                 accessToken: accessToken,
             })
 
-
-
-        axios.post('http://localhost:8080/addGroup', { name: name },
+        axios.post('http://localhost:8080/addGroup', 
+            { 
+                name: name,
+                parentGroupId: pid
+            },
             {
                 mode: 'no-cors',
                 headers: {

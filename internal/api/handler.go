@@ -28,7 +28,7 @@ type UserService interface {
 
 type NotesService interface {
 	// GROUPS
-	AddGroup(email string, nameGroup string) error
+	AddGroup(email string, nameGroup string, pid int) error
 	DelGroup(id int, email string) error
 	UpdateGroup(id int, email string, newNameGroup string) error
 	// NOTES
@@ -349,7 +349,19 @@ func (h *Handler) addGroup(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err := h.NotesService.AddGroup(email, name)
+	pid := 0
+	string_pid, ok3 := data["parentGroupId"]
+	if ok3 && string_pid != "" {
+		pid2, err := strconv.Atoi(string_pid)
+		if err != nil {
+			logger.NewLog("api - addGroup()", 2, err, "Filed to convert string to int", "string = "+string_pid)
+			apiError(w, r, http.StatusInternalServerError, nil)
+			return
+		}
+		pid = pid2
+	}
+
+	err := h.NotesService.AddGroup(email, name, pid)
 	if err != nil {
 		apiError(w, r, http.StatusInternalServerError, nil)
 		return

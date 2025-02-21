@@ -17,7 +17,7 @@ func NewTestNotesRepository(db *sql.DB) *TestNotesRepository {
 
 // GROUPS
 
-func (r *TestNotesRepository) AddGroup(email string, nameGroup string) error {
+func (r *TestNotesRepository) AddGroup(email string, nameGroup string, pid int) error {
 	res, err := r.db.Exec("INSERT INTO test_groups(user_email, name) VALUES ($1, $2)", email, nameGroup)
 	if err != nil {
 		return err
