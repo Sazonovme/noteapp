@@ -247,6 +247,10 @@ func (r *NotesRepository) GetNotesList(email string) (model.NoteList, error) {
 		}
 	}
 
+	if curGrp.Groups != nil {
+		*groupsLink = append(*groupsLink, curGrp)
+	}
+
 	if err = res.Err(); err != nil {
 		return model.NoteList{}, err
 	}
