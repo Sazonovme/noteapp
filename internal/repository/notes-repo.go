@@ -7,7 +7,8 @@ import (
 )
 
 var (
-	ErrInvalidData = errors.New("incorrect data")
+	ErrInvalidData   = errors.New("incorrect data")
+	ErrNoDataChanges = errors.New("no data found to change")
 )
 
 type NotesRepository struct {
@@ -63,7 +64,19 @@ func (r *NotesRepository) DelGroup(id int, email string) error {
 
 func (r *NotesRepository) UpdateGroup(id int, email string, newNameGroup string, pid int) error {
 
-	res, err := r.db.Exec("UPDATE groups SET (name, pid) = ($1, $2) WHERE id = $3 AND user_email = $4", newNameGroup, pid, id, email)
+	var res sql.Result
+	var err error
+
+	if newNameGroup != "" && pid == -1 {
+		res, err = r.db.Exec("UPDATE groups SET (name) = ($1) WHERE id = $2 AND user_email = $3", newNameGroup, id, email)
+	} else if newNameGroup == "" && pid != -1 {
+		res, err = r.db.Exec("UPDATE groups SET (pid) = ($1) WHERE id = $2 AND user_email = $3", pid, id, email)
+	} else if newNameGroup != "" && pid != -1 {
+		res, err = r.db.Exec("UPDATE groups SET (name, pid) = ($1, $2) WHERE id = $3 AND user_email = $4", newNameGroup, pid, id, email)
+	} else {
+		return ErrNoDataChanges
+	}
+
 	if err != nil {
 		return err
 	}
@@ -109,13 +122,13 @@ func (r *NotesRepository) DelNote(id int, email string) error {
 }
 
 func (r *NotesRepository) UpdateNote(id int, email string, title string, text string, group_id int) error {
-	var res sql.Result
-	var err error
-	if group_id == 0 {
-		res, err = r.db.Exec("UPDATE notes SET title = $1, text = $2 WHERE id = $3 AND user_email = $4", title, text, id, email)
-	} else {
-		res, err = r.db.Exec("UPDATE notes SET title = $1, text = $2, group_id = $3 WHERE id = $4 AND user_email = $5", title, text, id, group_id, email)
+
+	sqlRequest, params := getRequestAndParams(id, email, title, text, group_id)
+	if sqlRequest == "" {
+		return ErrInvalidData
 	}
+
+	res, err := r.db.Exec(sqlRequest, params...)
 	if err != nil {
 		return err
 	}
@@ -137,7 +150,7 @@ func (r *NotesRepository) GetNotesList(email string) (model.NoteList, error) {
 		`WITH RECURSIVE r AS (
 			SELECT id, pid, name, 1 AS level
 			FROM groups
-			WHERE user_email = $1 AND pid IS NULL 
+			WHERE user_email = $1 AND pid = 0 
 
 			UNION
 
@@ -176,7 +189,6 @@ func (r *NotesRepository) GetNotesList(email string) (model.NoteList, error) {
 		group_level int
 		notes_id    int
 		notes_title string
-		notes_text  string
 	}{}
 
 	gPid := 0
@@ -199,7 +211,6 @@ func (r *NotesRepository) GetNotesList(email string) (model.NoteList, error) {
 			&resRow.group_level,
 			&resRow.notes_id,
 			&resRow.notes_title,
-			&resRow.notes_text,
 		); err != nil {
 			return model.NoteList{}, err
 		}
@@ -208,7 +219,6 @@ func (r *NotesRepository) GetNotesList(email string) (model.NoteList, error) {
 			notes = append(notes, model.NoteElement{
 				Id:    resRow.notes_id,
 				Title: resRow.notes_title,
-				Text:  resRow.notes_text,
 			})
 			continue
 		} else {
@@ -242,7 +252,6 @@ func (r *NotesRepository) GetNotesList(email string) (model.NoteList, error) {
 				curGrp.Notes = append(curGrp.Notes, model.NoteElement{
 					Id:    resRow.notes_id,
 					Title: resRow.notes_title,
-					Text:  resRow.notes_text,
 				})
 			}
 		}
@@ -276,4 +285,37 @@ func (r *NotesRepository) GetNote(id int, email string) (model.Note, error) {
 	}
 
 	return note, nil
+}
+
+// HELPER
+
+func getRequestAndParams(id int, email string, title string, text string, group_id int) (string, []interface{}) {
+
+	params := []interface{}{}
+	sqlRequest := "UPDATE notes SET"
+
+	if title != "" {
+		sqlRequest += " title = ?,"
+		params = append(params, title)
+	}
+
+	if text != "" {
+		sqlRequest += " text = ?,"
+		params = append(params, text)
+	}
+
+	if group_id != -1 {
+		sqlRequest += " group_id = ?"
+		params = append(params, group_id)
+	}
+
+	if len(params) < 1 {
+		return "", nil
+	}
+
+	sqlRequest += "WHERE id = ? AND user_email = ?"
+	params = append(params, id)
+	params = append(params, email)
+
+	return sqlRequest, params
 }
