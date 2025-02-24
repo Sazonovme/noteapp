@@ -24,6 +24,7 @@ func NewNotesRepository(db *sql.DB) *NotesRepository {
 // GROUPS
 
 func (r *NotesRepository) AddGroup(email string, nameGroup string, pid int) error {
+
 	var res sql.Result
 	var err error
 
@@ -32,6 +33,7 @@ func (r *NotesRepository) AddGroup(email string, nameGroup string, pid int) erro
 	} else {
 		res, err = r.db.Exec("INSERT INTO groups(user_email, name, pid) VALUES ($1, $2, $3)", email, nameGroup, pid)
 	}
+
 	if err != nil {
 		return err
 	}

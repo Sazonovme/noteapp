@@ -40,7 +40,6 @@
     </div>
 
     <strong>Выйти из аккаунта</strong>
-    <button onclick="getGroupList()">Получить список групп</button>
 
     <button id="btn" onclick="update()">Обновить токены</button>
 
@@ -79,9 +78,9 @@
         <button onclick="getNote()">Получить заметку</button>
         <hr>
 
+        <br>
+        <br>
         <strong>Получить список заметок</strong>
-        <label for="get_note_list_group">Group-id</label>
-        <input type="text" name="get_note_list_group">
         <button onclick="getNoteList()">Получить заметки</button>
 
     </div>
@@ -111,9 +110,6 @@
         <input type="text" name="update_group_pid">
         <button onclick="updateGroup()">Обновить имя</button>
         <hr>
-
-        <strong>Получить список групп</strong>
-        <button onclick="getGroupList()">Получить список групп</button>
 
     </div>
 
@@ -378,12 +374,12 @@
 
     function getNoteList() {
 
-        id = document.getElementsByName("get_note_list_group")[0].value
+        // id = document.getElementsByName("get_note_list_group")[0].value
 
         accessToken = sessionStorage.getItem('accessToken')
         console.log(
             {
-                group_id: id,
+                // group_id: id,
                 accessToken: accessToken,
             })
 
@@ -408,18 +404,24 @@
         pid = document.getElementsByName("add_group_pid")[0].value
         
         accessToken = sessionStorage.getItem('accessToken')
-        console.log(
-            {
+
+        if (Number(pid) > 0) {
+            data = {
                 name: name,
-                pid: pid,
-                accessToken: accessToken,
-            })
+                parentGroupId: pid    
+            }
+        } else {
+            data = {
+                name: name,   
+            }    
+        }
+
+        console.log(
+            data)
+       
 
         axios.post('http://localhost:8080/addGroup', 
-            { 
-                name: name,
-                parentGroupId: pid
-            },
+            data,
             {
                 mode: 'no-cors',
                 headers: {
