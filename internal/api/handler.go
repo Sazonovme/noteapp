@@ -30,7 +30,7 @@ type NotesService interface {
 	// GROUPS
 	AddGroup(email string, nameGroup string, pid int) error
 	DelGroup(id int, email string) error
-	UpdateGroup(id int, email string, newNameGroup string) error
+	UpdateGroup(id int, email string, newNameGroup string, pid int) error
 	// NOTES
 	AddNote(email string, title string, text string, group_id int) error
 	DelNote(id int, email string) error
@@ -432,7 +432,8 @@ func (h *Handler) updateGroup(w http.ResponseWriter, r *http.Request) {
 	id_string, ok1 := data["id"]
 	email, ok2 := data["email"]
 	name, ok3 := data["name"]
-	if !(ok1 && ok2 && ok3 && email != "" && name != "" && id_string != "") {
+	string_pid, ok4 := data["parentGroupId"]
+	if !(ok1 && ok2 && ok3 && ok4 && email != "" && id_string != "" && name != "" && string_pid != "") {
 		logger.NewLog("api - updateGroup()", 2, nil, "Required fields are missing in r.Context",
 			"id = "+id_string+" email = "+email+" name = "+name)
 		apiError(w, r, http.StatusBadRequest, errRequiredFieldsMissing)
@@ -446,7 +447,14 @@ func (h *Handler) updateGroup(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = h.NotesService.UpdateGroup(id, email, name)
+	pid, err := strconv.Atoi(string_pid)
+	if err != nil {
+		logger.NewLog("api - updateGroup()", 2, err, "Filed to convert string to int", "string = "+id_string)
+		apiError(w, r, http.StatusInternalServerError, nil)
+		return
+	}
+
+	err = h.NotesService.UpdateGroup(id, email, name, pid)
 	if err == repository.ErrInvalidData {
 		apiError(w, r, http.StatusBadRequest, repository.ErrInvalidData)
 		return

@@ -61,8 +61,9 @@ func (r *NotesRepository) DelGroup(id int, email string) error {
 	return nil
 }
 
-func (r *NotesRepository) UpdateGroup(id int, email string, newNameGroup string) error {
-	res, err := r.db.Exec("UPDATE groups SET name = $1 WHERE id = $2 AND user_email = $3", newNameGroup, id, email)
+func (r *NotesRepository) UpdateGroup(id int, email string, newNameGroup string, pid int) error {
+
+	res, err := r.db.Exec("UPDATE groups SET (name, pid) = ($1, $2) WHERE id = $3 AND user_email = $4", newNameGroup, pid, id, email)
 	if err != nil {
 		return err
 	}

@@ -10,7 +10,7 @@ type NotesRepository interface {
 	// GROUPS
 	AddGroup(email string, nameGroup string, pid int) error
 	DelGroup(id int, email string) error
-	UpdateGroup(id int, email string, newNameGroup string) error
+	UpdateGroup(id int, email string, newNameGroup string, pid int) error
 	// NOTES
 	AddNote(email string, title string, text string, group_id int) error
 	DelNote(id int, email string) error
@@ -48,8 +48,8 @@ func (s *NotesService) DelGroup(id int, email string) error {
 	return err
 }
 
-func (s *NotesService) UpdateGroup(id int, email string, newNameGroup string) error {
-	err := s.repository.UpdateGroup(id, email, newNameGroup)
+func (s *NotesService) UpdateGroup(id int, email string, newNameGroup string, pid int) error {
+	err := s.repository.UpdateGroup(id, email, newNameGroup, pid)
 	if err != nil {
 		logger.NewLog("service - UpdateGroup()", 2, err, "Filed to update group in repository", nil)
 	}

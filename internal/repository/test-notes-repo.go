@@ -49,7 +49,7 @@ func (r *TestNotesRepository) DelGroup(id int, email string) error {
 	return nil
 }
 
-func (r *TestNotesRepository) UpdateGroup(id int, email string, newNameGroup string) error {
+func (r *TestNotesRepository) UpdateGroup(id int, email string, newNameGroup string, pid int) error {
 	res, err := r.db.Exec("UPDATE test_groups SET name = $1 WHERE id = $2 AND user_email = $3", newNameGroup, id, email)
 	if err != nil {
 		return err

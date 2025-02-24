@@ -109,6 +109,8 @@
         <input type="text" name="update_group_id">
         <label for="update_group_name">New name</label>
         <input type="text" name="update_group_name">
+        <label for="update_group_pid">New pid</label>
+        <input type="text" name="update_group_pid">
         <button onclick="updateGroup()">Обновить имя</button>
         <hr>
 
@@ -467,6 +469,7 @@
 
         id = document.getElementsByName("update_group_id")[0].value
         name = document.getElementsByName("update_group_name")[0].value
+        pid = document.getElementsByName("update_group_pid")[0].value
 
         accessToken = sessionStorage.getItem('accessToken')
         console.log(
@@ -479,6 +482,7 @@
         axios.put('http://localhost:8080/updateGroup', {
             id: id,
             name: name,
+            parentGroupId: pid
         },
             {
                 mode: 'no-cors',
