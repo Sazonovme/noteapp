@@ -32,7 +32,7 @@ type NotesService interface {
 	DelGroup(id int, email string) error
 	UpdateGroup(id int, email string, newNameGroup string, pid int) error
 	// NOTES
-	AddNote(email string, title string, text string, group_id int) error
+	AddNote(email string, title string, group_id int) error
 	DelNote(id int, email string) error
 	UpdateNote(id int, email string, title string, text string, group_id int) error
 	GetNotesList(email string) (model.NoteList, error)
@@ -485,9 +485,8 @@ func (h *Handler) addNote(w http.ResponseWriter, r *http.Request) {
 
 	email, ok1 := data["email"]
 	title, ok2 := data["title"]
-	text, ok3 := data["text"]
-	group_id_string, ok4 := data["group_id"]
-	if !(ok1 && ok2 && ok3 && ok4 && email != "" && title != "") {
+	group_id_string, ok3 := data["group_id"]
+	if !(ok1 && ok2 && ok3 && email != "" && title != "" && group_id_string != "") {
 		logger.NewLog("api - addNote()", 2, nil, "Required fields are missing in r.Context", nil)
 		apiError(w, r, http.StatusBadRequest, errRequiredFieldsMissing)
 		return
@@ -506,7 +505,7 @@ func (h *Handler) addNote(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	err = h.NotesService.AddNote(email, title, text, group_id)
+	err = h.NotesService.AddNote(email, title, group_id)
 	if err != nil {
 		apiError(w, r, http.StatusInternalServerError, nil)
 		return

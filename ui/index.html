@@ -50,8 +50,6 @@
         <strong>Добавить заметку</strong>
         <label for="add_note_title">Заголовок</label>
         <input type="text" name="add_note_title">
-        <label for="add_note_text">Текст</label>
-        <input type="text" name="add_note_text">
         <label for="add_note_group">id группы</label>
         <input type="text" name="add_note_group">
         <button onclick="addNote()">Добавить заметку</button>
@@ -261,7 +259,6 @@
     function addNote() {
 
         title = document.getElementsByName("add_note_title")[0].value
-        text = document.getElementsByName("add_note_text")[0].value
         group = document.getElementsByName("add_note_group")[0].value
         // if (group == null) group = 0
 
@@ -269,14 +266,12 @@
         console.log(
             {
                 title: title,
-                text: text,
                 group_id: group,
                 accessToken: accessToken,
             })
 
         axios.post('http://localhost:8080/addNote', {
             title: title,
-            text: text,
             group_id: group,
         },
             {

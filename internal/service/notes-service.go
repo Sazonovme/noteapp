@@ -12,7 +12,7 @@ type NotesRepository interface {
 	DelGroup(id int, email string) error
 	UpdateGroup(id int, email string, newNameGroup string, pid int) error
 	// NOTES
-	AddNote(email string, title string, text string, group_id int) error
+	AddNote(email string, title string, group_id int) error
 	DelNote(id int, email string) error
 	UpdateNote(id int, email string, title string, text string, group_id int) error
 	GetNotesList(email string) (model.NoteList, error)
@@ -58,14 +58,13 @@ func (s *NotesService) UpdateGroup(id int, email string, newNameGroup string, pi
 
 // NOTES
 
-func (s *NotesService) AddNote(email string, title string, text string, group_id int) error {
-	err := s.repository.AddNote(email, title, text, group_id)
+func (s *NotesService) AddNote(email string, title string, group_id int) error {
+	err := s.repository.AddNote(email, title, group_id)
 	if err != nil {
 		gID := strconv.Itoa(group_id)
 		m := map[string]string{
 			"email":    email,
 			"title":    title,
-			"text":     text,
 			"group_id": gID,
 		}
 		logger.NewLog("service - AddNote()", 2, err, "Filed to add note in repository", m)

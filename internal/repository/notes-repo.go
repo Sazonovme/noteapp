@@ -80,14 +80,14 @@ func (r *NotesRepository) UpdateGroup(id int, email string, newNameGroup string,
 
 // NOTES
 
-func (r *NotesRepository) AddNote(email string, title string, text string, group_id int) error {
+func (r *NotesRepository) AddNote(email string, title string, group_id int) error {
 	if group_id == 0 {
-		_, err := r.db.Exec("INSERT INTO notes(user_email, title, text) VALUES ($1, $2, $3)", email, title, text)
+		_, err := r.db.Exec("INSERT INTO notes(user_email, title) VALUES ($1, $2)", email, title)
 		return err
 	} else {
-		_, err := r.db.Exec(`INSERT INTO notes(user_email, title, text, group_id) 
-							VALUES ($1, $2, $3, (SELECT id as group_id FROM groups WHERE id = $4 AND user_email = $5))`,
-			email, title, text, group_id, email)
+		_, err := r.db.Exec(`INSERT INTO notes(user_email, title, group_id) 
+							VALUES ($1, $2, (SELECT id as group_id FROM groups WHERE id = $3 AND user_email = $4))`,
+			email, title, group_id, email)
 		return err
 	}
 }
