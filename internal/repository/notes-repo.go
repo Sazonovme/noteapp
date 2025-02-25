@@ -3,12 +3,16 @@ package repository
 import (
 	"database/sql"
 	"errors"
+	"fmt"
 	"noteapp/internal/model"
+	"noteapp/pkg/logger"
+	"strconv"
 )
 
 var (
-	ErrInvalidData   = errors.New("incorrect data")
-	ErrNoDataChanges = errors.New("no data found to change")
+	ErrInvalidData    = errors.New("incorrect data")
+	ErrNoDataChanges  = errors.New("no data found to change")
+	ErrFiledToConvert = errors.New("filed to convert string to int")
 )
 
 type NotesRepository struct {
@@ -70,11 +74,11 @@ func (r *NotesRepository) UpdateGroup(id int, email string, newNameGroup string,
 	var err error
 
 	if newNameGroup != "" && pid == -1 {
-		res, err = r.db.Exec("UPDATE groups SET (name) = ($1) WHERE id = $2 AND user_email = $3", newNameGroup, id, email)
+		res, err = r.db.Exec("UPDATE groups SET name = $1 WHERE id = $2 AND user_email = $3", newNameGroup, id, email)
 	} else if newNameGroup == "" && pid != -1 {
-		res, err = r.db.Exec("UPDATE groups SET (pid) = ($1) WHERE id = $2 AND user_email = $3", pid, id, email)
+		res, err = r.db.Exec("UPDATE groups SET pid = $1 WHERE id = $2 AND user_email = $3", pid, id, email)
 	} else if newNameGroup != "" && pid != -1 {
-		res, err = r.db.Exec("UPDATE groups SET (name, pid) = ($1, $2) WHERE id = $3 AND user_email = $4", newNameGroup, pid, id, email)
+		res, err = r.db.Exec("UPDATE groups SET name = $1, pid = $2 WHERE id = $3 AND user_email = $4", newNameGroup, pid, id, email)
 	} else {
 		return ErrNoDataChanges
 	}
@@ -96,7 +100,7 @@ func (r *NotesRepository) UpdateGroup(id int, email string, newNameGroup string,
 // NOTES
 
 func (r *NotesRepository) AddNote(email string, title string, group_id int) error {
-	if group_id == 0 {
+	if group_id == -1 {
 		_, err := r.db.Exec("INSERT INTO notes(user_email, title) VALUES ($1, $2)", email, title)
 		return err
 	} else {
@@ -123,9 +127,15 @@ func (r *NotesRepository) DelNote(id int, email string) error {
 	return nil
 }
 
-func (r *NotesRepository) UpdateNote(id int, email string, title string, text string, group_id int) error {
+func (r *NotesRepository) UpdateNote(data map[string]string) error {
 
-	sqlRequest, params := getRequestAndParams(id, email, title, text, group_id)
+	sqlRequest, params, err := getRequestAndParams(data)
+	fmt.Println(sqlRequest)
+	fmt.Println(params...)
+	if err != nil {
+		return err
+	}
+
 	if sqlRequest == "" {
 		return ErrInvalidData
 	}
@@ -291,33 +301,64 @@ func (r *NotesRepository) GetNote(id int, email string) (model.Note, error) {
 
 // HELPER
 
-func getRequestAndParams(id int, email string, title string, text string, group_id int) (string, []interface{}) {
+func getRequestAndParams(data map[string]string) (string, []interface{}, error) {
 
 	params := []interface{}{}
-	sqlRequest := "UPDATE notes SET"
+	sqlRequest := ""
 
-	if title != "" {
-		sqlRequest += " title = ?,"
+	string_id := data["id"]
+	id, err := strconv.Atoi(string_id)
+	if err != nil {
+		logger.NewLog("repo - getRequestAndParams()", 2, err, "Filed to convert string to int", "string = "+string_id)
+		return "", nil, ErrFiledToConvert
+	}
+	email := data["email"]
+
+	text, textOK := data["text"]
+	title, titleOK := data["title"]
+	group_id_string, group_id_stringOK := data["group_id"]
+
+	count := 1
+
+	if titleOK {
+		sqlRequest += " title = $" + strconv.Itoa(count) + " "
 		params = append(params, title)
+		count++
 	}
 
-	if text != "" {
-		sqlRequest += " text = ?,"
+	if textOK {
+		if sqlRequest != "" {
+			sqlRequest += ","
+		}
+		sqlRequest += " text = $" + strconv.Itoa(count) + " "
 		params = append(params, text)
+		count++
 	}
 
-	if group_id != -1 {
-		sqlRequest += " group_id = ?"
+	if group_id_stringOK {
+
+		group_id, err := strconv.Atoi(group_id_string)
+		if err != nil {
+			logger.NewLog("repo - getRequestAndParams()", 2, err, "Filed to convert string to int", "string = "+group_id_string)
+			return "", nil, ErrFiledToConvert
+		}
+
+		if sqlRequest != "" {
+			sqlRequest += ","
+		}
+		sqlRequest += " group_id = (SELECT id as group_id FROM groups WHERE id = $" + strconv.Itoa(count) + " AND user_email = $" + strconv.Itoa(count+1) + ") "
 		params = append(params, group_id)
+		params = append(params, email)
+		count += 2
 	}
 
 	if len(params) < 1 {
-		return "", nil
+		return "", nil, ErrNoDataChanges
 	}
 
-	sqlRequest += "WHERE id = ? AND user_email = ?"
+	sqlRequest = "UPDATE notes SET" + sqlRequest + "WHERE id = $" + strconv.Itoa(count) + " AND user_email = $" + strconv.Itoa(count+1)
 	params = append(params, id)
 	params = append(params, email)
 
-	return sqlRequest, params
+	return sqlRequest, params, nil
 }

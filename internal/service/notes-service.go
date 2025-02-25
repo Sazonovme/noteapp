@@ -14,7 +14,7 @@ type NotesRepository interface {
 	// NOTES
 	AddNote(email string, title string, group_id int) error
 	DelNote(id int, email string) error
-	UpdateNote(id int, email string, title string, text string, group_id int) error
+	UpdateNote(data map[string]string) error
 	GetNotesList(email string) (model.NoteList, error)
 	GetNote(id int, email string) (model.Note, error)
 }
@@ -84,18 +84,10 @@ func (s *NotesService) DelNote(id int, email string) error {
 	return err
 }
 
-func (s *NotesService) UpdateNote(id int, email string, title string, text string, group_id int) error {
-	err := s.repository.UpdateNote(id, email, title, text, group_id)
+func (s *NotesService) UpdateNote(data map[string]string) error {
+	err := s.repository.UpdateNote(data)
 	if err != nil {
-		gID := strconv.Itoa(group_id)
-		nID := strconv.Itoa(id)
-		m := map[string]string{
-			"id":       nID,
-			"title":    title,
-			"text":     text,
-			"group_id": gID,
-		}
-		logger.NewLog("service - UpdateNote()", 2, err, "Filed to update note in repository", m)
+		logger.NewLog("service - UpdateNote()", 2, err, "Filed to update note in repository", data)
 	}
 	return err
 }

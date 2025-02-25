@@ -258,18 +258,30 @@
         group = document.getElementsByName("add_note_group")[0].value
         // if (group == null) group = 0
 
-        accessToken = sessionStorage.getItem('accessToken')
-        console.log(
-            {
+        if (title != "" && group != "") {
+            data = {
                 title: title,
                 group_id: group,
-                accessToken: accessToken,
-            })
+            }
+        } else if (title != "") {
+            data = {
+                title: title
+            }
+        } else if (group != "") {
+            data = {
+                group_id: group
+            } 
+        } else {
+            data = {
+                title: "",
+                group_id: ""
+            }
+        }
 
-        axios.post('http://localhost:8080/addNote', {
-            title: title,
-            group_id: group,
-        },
+        accessToken = sessionStorage.getItem('accessToken')
+        console.log(data)
+
+        axios.post('http://localhost:8080/addNote', data,
             {
                 mode: 'no-cors',
                 headers: {
@@ -289,24 +301,27 @@
         title = document.getElementsByName("update_note_title")[0].value
         text = document.getElementsByName("update_note_text")[0].value
         group = document.getElementsByName("update_note_group")[0].value
-        if (group == null) group = 0
+
+        data = {
+            id: id,
+        }
+        
+        if (title != "") {
+            data.title = title
+        }
+
+        if (text != "") {
+            data.text = text
+        }
+
+        if (group != "") {
+            data.group_id = group
+        }
 
         accessToken = sessionStorage.getItem('accessToken')
-        console.log(
-            {
-                id: id,
-                title: title,
-                text: text,
-                group: group,
-                accessToken: accessToken,
-            })
+        console.log(data)
 
-        axios.put('http://localhost:8080/updateNote', {
-            id: id,
-            title: title,
-            text: text,
-            group_id: group,
-        },
+        axios.put('http://localhost:8080/updateNote', data,
             {
                 mode: 'no-cors',
                 headers: {
@@ -468,19 +483,28 @@
         name = document.getElementsByName("update_group_name")[0].value
         pid = document.getElementsByName("update_group_pid")[0].value
 
-        accessToken = sessionStorage.getItem('accessToken')
-        console.log(
-            {
+        if (pid != "" && name != "") {
+            data = {
                 id: id,
                 name: name,
-                accessToken: accessToken,
-            })
+                parentGroupId: pid
+            }
+        } else if (pid != "") {
+            data = {
+                id: id,
+                parentGroupId: pid
+            }   
+        } else if (name != "") {
+            data = {
+                id: id,
+                name: name,
+            }
+        }
 
-        axios.put('http://localhost:8080/updateGroup', {
-            id: id,
-            name: name,
-            parentGroupId: pid
-        },
+        accessToken = sessionStorage.getItem('accessToken')
+        console.log(data)
+
+        axios.put('http://localhost:8080/updateGroup', data,
             {
                 mode: 'no-cors',
                 headers: {

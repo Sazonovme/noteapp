@@ -33,7 +33,7 @@ type NotesService interface {
 	// NOTES
 	AddNote(email string, title string, group_id int) error
 	DelNote(id int, email string) error
-	UpdateNote(id int, email string, title string, text string, group_id int) error
+	UpdateNote(data map[string]string) error
 	GetNotesList(email string) (model.NoteList, error)
 	GetNote(id int, email string) (model.Note, error)
 }
@@ -511,7 +511,7 @@ func (h *Handler) addNote(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var err error
-	group_id := 0
+	group_id := -1
 	group_id_string, ok3 := data["group_id"]
 	if ok3 && group_id_string != "" {
 		group_id, err = strconv.Atoi(group_id_string)
@@ -596,30 +596,32 @@ func (h *Handler) updateNote(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	id, err := strconv.Atoi(string_id)
-	if err != nil {
-		logger.NewLog("api - updateNote()", 2, err, "Filed to convert string to int", "string = "+string_id)
-		apiError(w, r, http.StatusInternalServerError, nil)
-		return
-	}
+	// id, err := strconv.Atoi(string_id)
+	// if err != nil {
+	// 	logger.NewLog("api - updateNote()", 2, err, "Filed to convert string to int", "string = "+string_id)
+	// 	apiError(w, r, http.StatusInternalServerError, nil)
+	// 	return
+	// }
 
-	title := data["title"]
-	text := data["text"]
-	group_id_string := data["group_id"]
+	// text := data["text"]
 
-	var group_id int
-	if group_id_string == "" {
-		group_id = -1
-	} else {
-		group_id, err = strconv.Atoi(group_id_string)
-		if err != nil {
-			logger.NewLog("api - updateNote()", 2, err, "Filed to convert string to int", "string = "+group_id_string)
-			apiError(w, r, http.StatusInternalServerError, nil)
-			return
-		}
-	}
+	// title := data["title"]
 
-	err = h.NotesService.UpdateNote(id, email, title, text, group_id)
+	// group_id_string := data["group_id"]
+
+	// var group_id int
+	// if group_id_string == "" {
+	// 	group_id = -1
+	// } else {
+	// 	group_id, err = strconv.Atoi(group_id_string)
+	// 	if err != nil {
+	// 		logger.NewLog("api - updateNote()", 2, err, "Filed to convert string to int", "string = "+group_id_string)
+	// 		apiError(w, r, http.StatusInternalServerError, nil)
+	// 		return
+	// 	}
+	// }
+
+	err := h.NotesService.UpdateNote(data)
 	if err == repository.ErrInvalidData {
 		apiError(w, r, http.StatusBadRequest, repository.ErrInvalidData)
 		return

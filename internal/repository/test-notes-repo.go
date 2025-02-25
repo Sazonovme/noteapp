@@ -95,25 +95,25 @@ func (r *TestNotesRepository) DelNote(id int, email string) error {
 	return nil
 }
 
-func (r *TestNotesRepository) UpdateNote(id int, email string, title string, text string, group_id int) error {
-	var res sql.Result
-	var err error
-	if group_id == 0 {
-		res, err = r.db.Exec("UPDATE test_notes SET title = $1, text = $2 WHERE id = $3 AND user_email = $4", title, text, id, email)
-	} else {
-		res, err = r.db.Exec("UPDATE test_notes SET title = $1, text = $2, group_id = $3 WHERE id = $4 AND user_email = $5", title, text, id, group_id, email)
-	}
-	if err != nil {
-		return err
-	}
+func (r *TestNotesRepository) UpdateNote(data map[string]string) error {
+	// var res sql.Result
+	// var err error
+	// if group_id == 0 {
+	// 	res, err = r.db.Exec("UPDATE test_notes SET title = $1, text = $2 WHERE id = $3 AND user_email = $4", title, text, id, email)
+	// } else {
+	// 	res, err = r.db.Exec("UPDATE test_notes SET title = $1, text = $2, group_id = $3 WHERE id = $4 AND user_email = $5", title, text, id, group_id, email)
+	// }
+	// if err != nil {
+	// 	return err
+	// }
 
-	count, err := res.RowsAffected()
-	if err != nil {
-		return err
-	}
-	if count == 0 {
-		return ErrInvalidData
-	}
+	// count, err := res.RowsAffected()
+	// if err != nil {
+	// 	return err
+	// }
+	// if count == 0 {
+	// 	return ErrInvalidData
+	// }
 	return nil
 }
 
