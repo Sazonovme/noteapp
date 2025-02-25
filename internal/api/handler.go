@@ -83,12 +83,12 @@ func (h *Handler) InitHandler() *http.ServeMux {
 
 	// GROUPS
 
-	router.HandleFunc("/addGroup", chainMiddleware(
-		h.addGroup,
-		middlewareAuth(),
-		middlewareNoCors(),
-		middlewareLogIn()),
-	)
+	// router.HandleFunc("/addGroup", chainMiddleware(
+	// 	h.addGroup,
+	// 	middlewareAuth(),
+	// 	middlewareNoCors(),
+	// 	middlewareLogIn()),
+	// )
 
 	router.HandleFunc("/delGroup", chainMiddleware(
 		h.delGroup,
@@ -104,12 +104,12 @@ func (h *Handler) InitHandler() *http.ServeMux {
 		middlewareLogIn()),
 	)
 
-	router.HandleFunc("/getGroupList", chainMiddleware(
-		h.getGroupList,
-		middlewareAuth(),
-		middlewareNoCors(),
-		middlewareLogIn()),
-	)
+	// router.HandleFunc("/getGroupList", chainMiddleware(
+	// 	h.getGroupList,
+	// 	middlewareAuth(),
+	// 	middlewareNoCors(),
+	// 	middlewareLogIn()),
+	// )
 
 	// NOTES
 

@@ -2,34 +2,23 @@
     <div class="text-container">
         <MarkdownRender
             v-if="markdownStore.readOnly"
-            :markdown-text="text"
+            :markdown-text="markdownStore.currentOpenTextNode"
         />
         <MarkdownWriteArea
             v-else
-            v-model="text"
+            v-model="markdownStore.currentOpenTextNode"
         />
     </div>
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
-
 import { MarkdownWriteArea } from '@features/markdown';
 
-import { MarkdownRender, useMarkdownStore } from '@entities/markdown';
+import { MarkdownRender } from '@entities/markdown';
 
-const markdownStore = useMarkdownStore();
+import { useMarkdownTextField } from './use-markdown-text-field';
 
-const MSG = `
-# markdown-it rulezz!
-
-__13d__ 
-~~dslfkjn~~ //\n
-- [x] das;k
-- asdk2
-`;
-
-const text = ref(MSG);
+const { state, markdownStore } = useMarkdownTextField();
 </script>
 
 <style src="./markdown-text-field.css" scoped />
