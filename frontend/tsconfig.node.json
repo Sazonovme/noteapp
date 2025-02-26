@@ -1,5 +1,9 @@
 {
   "compilerOptions": {
+    
+     "moduleResolution": "node",
+    "esModuleInterop": true,
+
     "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.node.tsbuildinfo",
     "target": "ES2022",
     "lib": [
@@ -11,7 +15,7 @@
     "skipLibCheck": true,
 
     /* Bundler mode */
-    "moduleResolution": "Bundler",
+    // "moduleResolution": "Bundler",
     "allowImportingTsExtensions": true,
     "isolatedModules": true,
     "moduleDetection": "force",
@@ -25,19 +29,20 @@
     "noUncheckedSideEffectImports": true,
     "baseUrl": "./",
     "paths": {
-      "app/*": ["src/0_app/*"],
-      "pages/*": ["./src/1_pages/*"],
-      "widgets/*": ["./src/2_widgets/*"],
-      "features/*": ["./src/3_features/*"],
-      "entities/*": ["./src/4_entities/*"],
-      "shared/*": ["./src/shared/*"],
-      "src/*": ["./src/*"],
+      "@app/*": ["src/0_app/*"],
+      "@pages/*": ["./src/1_pages/*"],
+      "@widgets/*": ["./src/2_widgets/*"],
+      "@features/*": ["./src/3_features/*"],
+      "@entities/*": ["./src/4_entities/*"],
+      "@shared/*": ["src/shared/*"],
+      "@/*": ["./src/*"],
     },
   },
   "include": [
     "./.eslintrc.cjs",
     "./rules/**/*",
     "./src/**/*",
+    "./src/**/*.ts",
     "./src/**/*.vue",
     "./vite.config.ts"
   ],

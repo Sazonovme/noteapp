@@ -87,6 +87,9 @@
 
     --w-shadow-first-color: var(--w-graphite-9-A24);
     --w-shadow-second-color: var(--w-graphite-9-A60);
+
+    
+    --el-bg-color: var(--w-graphite-1);
 }
 
 :root[data-theme='light'] {

@@ -3,3 +3,9 @@
     height: 100vh;
     overflow: hidden;
 }
+
+.auth-button {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+}

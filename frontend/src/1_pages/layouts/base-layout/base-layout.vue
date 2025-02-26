@@ -2,12 +2,7 @@
     <div class="container">
         <!-- todo это нужно вынести в отельный компонент -->
         <nav>
-            <RouterLink to="/">
-                Home
-            </RouterLink>
-            <RouterLink to="/auth">
-                auth
-            </RouterLink>
+            <SignInButton class="auth-button" />
         </nav>
 
         <main>
@@ -17,6 +12,7 @@
 </template>
 
 <script setup lang="ts">
+import { SignInButton } from '@features/user';
 </script>
 
-<style scoped src="./base-layout.css" />
+<style src="./base-layout.css" scoped />

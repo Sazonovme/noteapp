@@ -1,0 +1,37 @@
+.container {
+    position: relative;
+
+    height: 85vh;
+    max-width: 70vw;
+
+    padding: var(--w-indent-xxl);
+    margin: 0 auto;
+
+    overflow: auto;
+}
+
+.switcher {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+}
+
+.delete-btn {
+    position: absolute;
+    top: 50px;
+    right: 20px;
+}
+
+.img {
+    height: 20px;
+    width: 20px;
+
+    background-color: var(--w-red-1);
+
+    transition: background-color .2s;
+
+    -webkit-mask-image: url('/public/icons/trash.svg');
+    mask-image: url('/public/icons/trash.svg');
+    -webkit-mask-position: center;
+    -webkit-mask-repeat: no-repeat;
+}

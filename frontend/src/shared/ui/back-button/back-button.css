@@ -1,0 +1,12 @@
+.text {
+    padding: 5px 10px;
+
+    border: none;
+    outline: none;
+
+    font-size: 22px;
+
+    background-color: var(--w-transparent);
+
+    cursor: pointer;
+}

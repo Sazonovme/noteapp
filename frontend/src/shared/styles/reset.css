@@ -104,6 +104,8 @@ section {
 }
 
 body {
+    height: 100%;
+
     line-height: 1;
 
     color: var(--w-text-main);

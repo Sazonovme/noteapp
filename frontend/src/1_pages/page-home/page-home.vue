@@ -1,9 +1,24 @@
 <template>
-    <h1>base</h1>
-    <!-- <RouterLink
-        to="/auth"
-        name="auth"
-    >
-        AuthPage
-    </RouterLink> -->
+    <MarkdownTreeNotes />
+    <div class="container">
+        <MarkdownToggleReadOnly class="switcher" />
+        <DeleteNoteButton
+            class="delete-btn"
+            size="large"
+            circle
+        >
+            <div class="img" />
+        </DeleteNoteButton>
+
+        <MarkdownWidget />
+    </div>
 </template>
+
+<script setup lang="ts">
+import { MarkdownWidget, MarkdownTreeNotes } from '@widgets/markdown';
+
+import { MarkdownToggleReadOnly, DeleteNoteButton } from '@features/markdown';
+
+</script>
+
+<style src="./page-home.css" scoped />
