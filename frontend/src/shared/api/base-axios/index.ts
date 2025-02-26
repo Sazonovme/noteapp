@@ -18,8 +18,8 @@ const instance = axios.create({
 
 const _setHeaders = (config: InternalAxiosRequestConfig): InternalAxiosRequestConfig => {
     if (config.includeAuthToken !== false) {
-        const { typeToken, accessToken } = getAuthTokens();
-        config.headers.Authorization = `${typeToken} ${accessToken}`;
+        const { accessToken } = getAuthTokens();
+        config.headers.Authorization = `Bearer ${accessToken}`;
     }
 
     return config;
@@ -35,8 +35,8 @@ const _refreshToken = async (config: InternalAxiosRequestConfig) => {
             return Promise.reject({ data: { message: 'refresh_token отсутствует' }, status: 401 });
         }
 
-        const { data } = await api.authorization.refreshToken({ refresh_token: refreshToken });
-        setAuthTokens({ access: data.access_token, refresh: data.refresh_token, type: data.token_type });
+        const { data } = await api.authorization.refreshToken({ refreshToken });
+        setAuthTokens({ access: data.accessToken, refresh: data.refreshToken });
 
         return instance(config);
     } catch (error) {

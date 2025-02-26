@@ -1,1 +1,1 @@
-export const API_BASE_URL = import.meta.env.BASE_URL || 'localhost:8080';
+export const API_BASE_URL = 'http://localhost:8079/'; //import.meta.env.BASE_URL ||

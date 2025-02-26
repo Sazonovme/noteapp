@@ -2,6 +2,7 @@ import { ResponseTreeListType, PreparedTreeListType } from '../../model';
 
 const preparedNotes = (tree: ResponseTreeListType['data']['notes']): PreparedTreeListType => tree.map(val => ({
     id: val.note_id,
+    key: val.note_id,
     title: val.note_title,
     isFolder: false,
     isNote: true,
@@ -9,6 +10,7 @@ const preparedNotes = (tree: ResponseTreeListType['data']['notes']): PreparedTre
 
 const preparedGroup = (tree: ResponseTreeListType['data']['groups']): PreparedTreeListType => tree.map(val => ({
     id: val.group_id,
+    key: val.group_id,
     title: val.group_name,
     isFolder: true,
     isNote: false,
@@ -17,7 +19,8 @@ const preparedGroup = (tree: ResponseTreeListType['data']['groups']): PreparedTr
 
 export const preparedTreeList = (treeList: ResponseTreeListType): PreparedTreeListType => ([
     {
-        id: '-1',
+        id: '0',
+        key: '0',
         title: 'Root',
         isFolder: true,
         isNote: false,

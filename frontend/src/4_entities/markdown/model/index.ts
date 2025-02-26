@@ -20,6 +20,7 @@ export type ResponseTreeListType = {
 
 export type PreparedTreeListType = {
     id: string,
+    key: string,
     title: string,
     children?: PreparedTreeListType[]
     isFolder: boolean,

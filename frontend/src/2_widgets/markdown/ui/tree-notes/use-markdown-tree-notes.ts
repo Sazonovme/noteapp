@@ -1,6 +1,6 @@
 import { ref, onBeforeMount } from 'vue';
 
-import { createGroup, createNote, deleteGroup, updateGroup } from '@features/markdown/api/';
+import { createGroup, createNote, deleteGroup, updateGroup, updateNote } from '@features/markdown/api/';
 
 import { useMarkdownStore } from '@entities/markdown';
 import { getNote, getTreeList } from '@entities/markdown/api';
@@ -47,8 +47,11 @@ const useActions = (state: ReturnType<typeof useState>, store: ReturnType<typeof
     };
 
     const onDropFile = async (draggingNode: any, dropNode: any) => {
-        //todo возможно разные запросы для заметок и для папок
-        await updateGroup({ id: draggingNode.id, newIdGroup: dropNode.id });
+        if (draggingNode.data.isNote) {
+            await updateNote({ id: draggingNode.data.id, group_id: dropNode.data.id });
+            return;
+        }
+        await updateGroup({ id: draggingNode.data.id, parentGroupId: dropNode.data.id });
     };
 
     const onOpenNote = async (id: string) => {
@@ -74,9 +77,9 @@ export const useMarkdownTreeNotes = () => {
     const actions = useActions(state, markdownStore);
 
     onBeforeMount(async () => {
-        const treeList = await getTreeList();
+        const treeListResponse = await getTreeList();
 
-        markdownStore.setTree(treeList);
+        markdownStore.setTree(treeListResponse);
     });
 
     return {
