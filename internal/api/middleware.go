@@ -77,7 +77,7 @@ func middlewareAuth() Middleware {
 				return
 			}
 
-			login, err := service.VerifyAccessToken(accessTokenArr[1])
+			email, err := service.VerifyAccessToken(accessTokenArr[1])
 			if err != nil {
 				if err == service.ErrTokenInvalid {
 					apiError(w, r, http.StatusUnauthorized, err)
@@ -88,16 +88,10 @@ func middlewareAuth() Middleware {
 			}
 
 			m := map[string]string{}
-			if r.Method != http.MethodGet {
-				err := json.NewDecoder(r.Body).Decode(&m)
-				if err != nil {
-					logger.NewLog("api - middlewareAuth()", 2, err, "Field to decode r.Body", nil)
-					apiError(w, r, http.StatusInternalServerError, nil)
-					return
-				}
-			}
 
-			m["login"] = login
+			json.NewDecoder(r.Body).Decode(&m)
+
+			m["email"] = email
 
 			ctx := context.WithValue(r.Context(), ctxKey{}, m)
 
