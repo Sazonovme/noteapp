@@ -49,15 +49,15 @@ func NewTestHandler(t *testing.T) (
 	db, create, teardown := database.NewTestPostgresConnection(t, info)
 
 	// init deps
-	authRepo := repository.NewTestAuthRepository(db)
+	//authRepo := repository.NewTestAuthRepository(db)
 	userRepo := repository.NewTestUserRepository(db)
 	noteRepo := repository.NewTestNotesRepository(db)
 
-	authService := service.NewAuthService(authRepo)
+	//authService := service.NewAuthService(authRepo)
 	userService := service.NewUserService(userRepo)
 	noteService := service.NewNotesService(noteRepo)
 
-	h := NewHandler(userService, authService, noteService)
+	h := NewHandler(userService, noteService)
 	handler := h.InitHandler()
 	return handler, create, teardown, db
 }
