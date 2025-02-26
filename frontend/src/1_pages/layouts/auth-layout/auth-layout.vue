@@ -1,12 +1,26 @@
 <template>
+    <BackButton
+        class="link"
+        :to="ROUTES_PATH_COMMON.HOME"
+    >
+        <img
+            class="img"
+            src="/public/icons/home.svg"
+            width="25"
+            height="25"
+            alt="На главную"
+        >
+    </BackButton>
     <div class="container">
-        <main>
+        <main class="main">
             <slot />
         </main>
     </div>
 </template>
 
 <script setup lang="ts">
+import { BackButton } from '@shared/ui';
+import { ROUTES_PATH_COMMON } from '@shared/constants';
 </script>
 
 <style src="./auth-layout.css" scoped />

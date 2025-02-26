@@ -1,8 +1,6 @@
 <template>
-    <RouterLink to="/auth">
-        <button
-            class="button"
-        />
+    <RouterLink :to="{ name: 'auth', query: { type: 'signin' } }">
+        <button class="button" />
     </RouterLink>
 </template>
 

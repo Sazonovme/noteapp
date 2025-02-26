@@ -13,7 +13,7 @@ module.exports = {
 			{
 				emptyLineBefore: 'threshold',
         noEmptyLineBetween: true,
-				properties: ['display', 'justify-content', 'align-items']
+				properties: ['display', 'justify-content', 'align-items', 'flex-direction']
 			},
 			{
 				emptyLineBefore: 'threshold',

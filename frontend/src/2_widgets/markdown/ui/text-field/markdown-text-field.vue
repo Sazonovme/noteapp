@@ -1,39 +1,24 @@
 <template>
-    <div class="container">
-        <MarkdownToggleReadOnly class="switcher" />
-
-        <div class="text-container">
-            <MarkdownRender
-                v-if="markdownStore.readOnly"
-                :markdown-text="text"
-            />
-            <MarkdownWriteArea
-                v-else
-                v-model="text"
-            />
-        </div>
+    <div class="text-container">
+        <MarkdownRender
+            v-if="markdownStore.readOnly"
+            :markdown-text="markdownStore.currentOpenTextNode"
+        />
+        <MarkdownWriteArea
+            v-else
+            v-model="markdownStore.currentOpenTextNode"
+        />
     </div>
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
+import { MarkdownWriteArea } from '@features/markdown';
 
-import { MarkdownToggleReadOnly, MarkdownWriteArea } from '@features/markdown';
+import { MarkdownRender } from '@entities/markdown';
 
-import { MarkdownRender, useMarkdownStore } from '@entities/markdown';
+import { useMarkdownTextField } from './use-markdown-text-field';
 
-const markdownStore = useMarkdownStore();
-
-const MSG = `
-# markdown-it rulezz!
-
-__13d__ 
-~~dslfkjn~~ //\n
-- [x] das;k
-- asdk2
-`;
-
-const text = ref(MSG);
+const { state, markdownStore } = useMarkdownTextField();
 </script>
 
 <style src="./markdown-text-field.css" scoped />
