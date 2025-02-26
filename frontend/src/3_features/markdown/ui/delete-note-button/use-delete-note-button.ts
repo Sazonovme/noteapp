@@ -1,6 +1,6 @@
 import { ref } from 'vue';
 
-import api from '@features/markdown/api';
+import { deleteNote as deleteNoteApi} from '@features/markdown/api';
 
 import { useMarkdownStore } from '@entities/markdown';
 
@@ -21,7 +21,7 @@ const useActions = (emit: (e: string) => void, state: UseActionsType, store: Ret
 
     const deleteNote = async () => {
         state.dialogVisible.value = false;
-        await api.deleteNote(store.currentOpenIdNode);
+        await deleteNoteApi(store.currentOpenIdNode);
         emit('success-delete');
     };
 
