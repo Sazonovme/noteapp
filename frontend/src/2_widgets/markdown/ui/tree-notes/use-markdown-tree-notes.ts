@@ -34,7 +34,7 @@ const useActions = (state: ReturnType<typeof useState>, store: ReturnType<typeof
         e.preventDefault();
         e.stopPropagation();
 
-        await createNote({ group_id: id, title: 'New Note' });
+        await createNote({ group_id: String(id), title: 'New Note' });
         onCloseTreeDialog();
     };
 
@@ -48,10 +48,10 @@ const useActions = (state: ReturnType<typeof useState>, store: ReturnType<typeof
 
     const onDropFile = async (draggingNode: any, dropNode: any) => {
         if (draggingNode.data.isNote) {
-            await updateNote({ id: draggingNode.data.id, group_id: dropNode.data.id });
+            await updateNote({ id: String(draggingNode.data.id), group_id: String(dropNode.data.id) });
             return;
         }
-        await updateGroup({ id: draggingNode.data.id, parentGroupId: dropNode.data.id });
+        await updateGroup({ id: String(draggingNode.data.id), parentGroupId: String(dropNode.data.id) });
     };
 
     const onOpenNote = async (id: string) => {
