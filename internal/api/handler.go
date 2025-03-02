@@ -14,7 +14,7 @@ import (
 
 var (
 	errMethodNotAllowed      = errors.New("method not allowed")
-	errWrongPassword         = errors.New("wrong login or password")
+	errWrongPassword         = errors.New("wrong email or password")
 	errRequiredFieldsMissing = errors.New("required fields are missing or not filled in")
 )
 
@@ -25,35 +25,27 @@ type UserService interface {
 	FindByLogin(string) (*model.User, error)
 }
 
-type AuthService interface {
-	MakeRefreshSession(string, string) (*service.RequestTokenData, error)
-	UpdateTokens(oldRefreshToken string, fingerprint string) (*service.RequestTokenData, error)
-}
-
 type NotesService interface {
 	// GROUPS
-	AddGroup(login string, nameGroup string) error
-	DelGroup(id int, login string) error
-	UpdateGroup(id int, login string, newNameGroup string) error
-	GetGroupList(login string) (model.GroupList, error)
+	AddGroup(email string, nameGroup string, pid int) error
+	DelGroup(id int, email string) error
+	UpdateGroup(id int, email string, newNameGroup string, pid int) error
 	// NOTES
-	AddNote(login string, title string, text string, group_id int) error
-	DelNote(id int, login string) error
-	UpdateNote(id int, login string, title string, text string, group_id int) error
-	GetNotesList(login string, group_id int) (model.NoteList, error)
-	GetNote(id int, login string) (model.Note, error)
+	AddNote(email string, title string, group_id int) error
+	DelNote(id int, email string) error
+	UpdateNote(data map[string]string) error
+	GetNotesList(email string) (model.NoteList, error)
+	GetNote(id int, email string) (model.Note, error)
 }
 
 type Handler struct {
 	UserService  UserService
-	AuthService  AuthService
 	NotesService NotesService
 }
 
-func NewHandler(userService UserService, authService AuthService, notesService NotesService) *Handler {
+func NewHandler(userService UserService, notesService NotesService) *Handler {
 	return &Handler{
 		UserService:  userService,
-		AuthService:  authService,
 		NotesService: notesService,
 	}
 }
@@ -81,14 +73,23 @@ func (h *Handler) InitHandler() *http.ServeMux {
 		middlewareLogIn()),
 	)
 
-	// GROUPS
+	//LOG OUT
 
-	router.HandleFunc("/addGroup", chainMiddleware(
-		h.addGroup,
+	router.HandleFunc("/logout", chainMiddleware(
+		h.logOut,
 		middlewareAuth(),
 		middlewareNoCors(),
 		middlewareLogIn()),
 	)
+
+	// GROUPS
+
+	// router.HandleFunc("/addGroup", chainMiddleware(
+	// 	h.addGroup,
+	// 	middlewareAuth(),
+	// 	middlewareNoCors(),
+	// 	middlewareLogIn()),
+	// )
 
 	router.HandleFunc("/delGroup", chainMiddleware(
 		h.delGroup,
@@ -99,13 +100,6 @@ func (h *Handler) InitHandler() *http.ServeMux {
 
 	router.HandleFunc("/updateGroup", chainMiddleware(
 		h.updateGroup,
-		middlewareAuth(),
-		middlewareNoCors(),
-		middlewareLogIn()),
-	)
-
-	router.HandleFunc("/getGroupList", chainMiddleware(
-		h.getGroupList,
 		middlewareAuth(),
 		middlewareNoCors(),
 		middlewareLogIn()),
@@ -169,10 +163,16 @@ func (h *Handler) createUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if d.User.Email == "" || d.User.Password == "" || d.User.Fingerprint == "" {
+		logger.NewLog("api - createUser()", 2, err, "email or password or fingerprint not found in r.Body", err)
+		apiError(w, r, http.StatusInternalServerError, nil)
+		return
+	}
+
 	err = h.UserService.CreateUser(&d.User)
 	if err == service.ErrUserExist ||
 		err == model.ErrValidationPassword ||
-		err == model.ErrValidationLogin {
+		err == model.ErrValidationEmail {
 
 		apiError(w, r, http.StatusBadRequest, err)
 		return
@@ -183,9 +183,28 @@ func (h *Handler) createUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// AT ONCE AUTH
+	refSession, err := service.MakeRefreshSession(d.User.Email, d.User.Fingerprint)
+	if err != nil {
+		apiError(w, r, http.StatusInternalServerError, nil)
+		return
+	}
+
+	respData := &service.RequestTokenData{
+		AccessToken:  refSession.AccessToken,
+		RefreshToken: refSession.RefreshToken,
+	}
+
 	w.WriteHeader(http.StatusCreated)
+
+	err = json.NewEncoder(w).Encode(respData)
+	if err != nil {
+		apiError(w, r, http.StatusInternalServerError, nil)
+		return
+	}
+
 	logger.NewLog("api - CreateUser()", 5, nil,
-		"OUT - User created "+time.Now().Format("02.01 15:04:05"), nil)
+		"OUT - User created and authorized "+time.Now().Format("02.01 15:04:05"), nil)
 }
 
 // AUTH
@@ -205,7 +224,13 @@ func (h *Handler) authUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	u, err := h.UserService.FindByLogin(d.User.Login)
+	if d.User.Email == "" || d.User.Password == "" || d.User.Fingerprint == "" {
+		logger.NewLog("api - authUser()", 2, err, "email or password or fingerprint not found in r.Body", err)
+		apiError(w, r, http.StatusInternalServerError, nil)
+		return
+	}
+
+	u, err := h.UserService.FindByLogin(d.User.Email)
 	if err != nil && err == repository.ErrUserNotFound {
 		apiError(w, r, http.StatusBadRequest, repository.ErrUserNotFound)
 		return
@@ -220,7 +245,7 @@ func (h *Handler) authUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	refSession, err := h.AuthService.MakeRefreshSession(u.Login, u.Fingerprint)
+	refSession, err := service.MakeRefreshSession(u.Email, d.User.Fingerprint)
 	if err != nil {
 		apiError(w, r, http.StatusInternalServerError, nil)
 		return
@@ -257,7 +282,49 @@ func (h *Handler) refreshToken(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	refSession, err := h.AuthService.UpdateTokens(reqData.Data.RefreshToken, reqData.Data.Fingerprint)
+	if reqData.Data.Fingerprint == "" || reqData.Data.RefreshToken == "" {
+		logger.NewLog("api - refreshToken()", 2, err, "refreshtoken or fingerprint not found in r.Body", err)
+		apiError(w, r, http.StatusInternalServerError, nil)
+		return
+	}
+
+	refSession, err := service.UpdateTokens(reqData.Data.RefreshToken, reqData.Data.Fingerprint)
+	if err != nil {
+		apiError(w, r, http.StatusInternalServerError, nil)
+		return
+	}
+
+	err = json.NewEncoder(w).Encode(refSession)
+	if err != nil {
+		apiError(w, r, http.StatusInternalServerError, nil)
+		return
+	}
+
+	logger.NewLog("api - RefreshToken()", 5, nil,
+		"OUT - New tokens generated "+time.Now().Format("02.01 15:04:05"), refSession)
+}
+
+// LOG OUT
+
+func (h *Handler) logOut(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		apiError(w, r, http.StatusMethodNotAllowed, errMethodNotAllowed)
+		return
+	}
+
+	reqData := &struct {
+		Data struct {
+			RefreshToken string `json:"refreshToken"`
+			Fingerprint  string `json:"fingerprint"`
+		} `json:"data"`
+	}{}
+	err := json.NewDecoder(r.Body).Decode(reqData)
+	if err != nil {
+		apiError(w, r, http.StatusInternalServerError, nil)
+		return
+	}
+
+	refSession, err := service.UpdateTokens(reqData.Data.RefreshToken, reqData.Data.Fingerprint)
 	if err != nil {
 		apiError(w, r, http.StatusInternalServerError, nil)
 		return
@@ -288,16 +355,28 @@ func (h *Handler) addGroup(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	login, ok1 := data["login"]
+	email, ok1 := data["email"]
 	name, ok2 := data["name"]
-	if !(ok1 && ok2 && login != "" && name != "") {
+	if !(ok1 && ok2 && email != "" && name != "") {
 		logger.NewLog("api - addNote()", 2, nil, "Required fields are missing in r.Context",
-			"login = "+login+"name = "+name)
+			"email = "+email+" name = "+name)
 		apiError(w, r, http.StatusBadRequest, errRequiredFieldsMissing)
 		return
 	}
 
-	err := h.NotesService.AddGroup(login, name)
+	pid := 0
+	string_pid, ok3 := data["parentGroupId"]
+	if ok3 && string_pid != "" {
+		pid2, err := strconv.Atoi(string_pid)
+		if err != nil {
+			logger.NewLog("api - addGroup()", 2, err, "Filed to convert string to int", "string = "+string_pid)
+			apiError(w, r, http.StatusInternalServerError, nil)
+			return
+		}
+		pid = pid2
+	}
+
+	err := h.NotesService.AddGroup(email, name, pid)
 	if err != nil {
 		apiError(w, r, http.StatusInternalServerError, nil)
 		return
@@ -321,11 +400,11 @@ func (h *Handler) delGroup(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	id_string, ok1 := data["id"]
-	login, ok2 := data["login"]
-	if !(ok1 && ok2 && login != "" && id_string != "") {
+	id_string := r.URL.Query().Get("id")
+	email, ok1 := data["email"]
+	if !(ok1 && email != "" && id_string != "") {
 		logger.NewLog("api - delGroup()", 2, nil, "Required fields are missing in r.Context",
-			"login = "+login+"id = "+id_string)
+			"email = "+email+" id = "+id_string)
 		apiError(w, r, http.StatusBadRequest, errRequiredFieldsMissing)
 		return
 	}
@@ -337,7 +416,7 @@ func (h *Handler) delGroup(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = h.NotesService.DelGroup(id, login)
+	err = h.NotesService.DelGroup(id, email)
 	if err == repository.ErrInvalidData {
 		apiError(w, r, http.StatusBadRequest, repository.ErrInvalidData)
 		return
@@ -365,11 +444,10 @@ func (h *Handler) updateGroup(w http.ResponseWriter, r *http.Request) {
 	}
 
 	id_string, ok1 := data["id"]
-	login, ok2 := data["login"]
-	name, ok3 := data["name"]
-	if !(ok1 && ok2 && ok3 && login != "" && name != "" && id_string != "") {
+	email, ok2 := data["email"]
+	if !(ok1 && ok2 && email != "" && id_string != "") {
 		logger.NewLog("api - updateGroup()", 2, nil, "Required fields are missing in r.Context",
-			"id = "+id_string+" login = "+login+" name = "+name)
+			"id = "+id_string+" email = "+email)
 		apiError(w, r, http.StatusBadRequest, errRequiredFieldsMissing)
 		return
 	}
@@ -381,7 +459,21 @@ func (h *Handler) updateGroup(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = h.NotesService.UpdateGroup(id, login, name)
+	name := data["name"]
+
+	pid := -1
+	string_pid, ok4 := data["parentGroupId"]
+	if ok4 && string_pid != "" {
+		pid2, err := strconv.Atoi(string_pid)
+		if err != nil {
+			logger.NewLog("api - updateGroup()", 2, err, "Filed to convert string to int", "string = "+string_pid)
+			apiError(w, r, http.StatusInternalServerError, nil)
+			return
+		}
+		pid = pid2
+	}
+
+	err = h.NotesService.UpdateGroup(id, email, name, pid)
 	if err == repository.ErrInvalidData {
 		apiError(w, r, http.StatusBadRequest, repository.ErrInvalidData)
 		return
@@ -393,42 +485,6 @@ func (h *Handler) updateGroup(w http.ResponseWriter, r *http.Request) {
 
 	logger.NewLog("api - updateGroup()", 5, nil,
 		"OUT - Group updated "+time.Now().Format("02.01 15:04:05"), nil)
-}
-
-func (h *Handler) getGroupList(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodGet {
-		apiError(w, r, http.StatusMethodNotAllowed, errMethodNotAllowed)
-		return
-	}
-
-	data, ok := r.Context().Value(ctxKey{}).(map[string]string)
-	if !ok {
-		logger.NewLog("api - getGroupList()", 2, nil, "Filed to recive contex data", nil)
-		apiError(w, r, http.StatusInternalServerError, nil)
-		return
-	}
-
-	login, ok := data["login"]
-	if !(ok && login != "") {
-		logger.NewLog("api - getGroupList()", 2, nil, "Field login not exist in r.Context()", "login = "+login)
-		apiError(w, r, http.StatusBadRequest, errRequiredFieldsMissing)
-		return
-	}
-
-	gList, err := h.NotesService.GetGroupList(login)
-	if err != nil {
-		apiError(w, r, http.StatusInternalServerError, nil)
-		return
-	}
-
-	if err := json.NewEncoder(w).Encode(gList); err != nil {
-		logger.NewLog("api - getGroupList()", 2, err, "Filed to encode r.Body", nil)
-		apiError(w, r, http.StatusInternalServerError, nil)
-		return
-	}
-
-	logger.NewLog("api - getGroupList()", 5, nil,
-		"OUT - List geted "+time.Now().Format("02.01 15:04:05"), nil)
 }
 
 // NOTES
@@ -446,21 +502,18 @@ func (h *Handler) addNote(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	login, ok1 := data["login"]
+	email, ok1 := data["email"]
 	title, ok2 := data["title"]
-	text, ok3 := data["text"]
-	group_id_string, ok4 := data["group_id"]
-	if !(ok1 && ok2 && ok3 && ok4 && login != "" && title != "") {
+	if !(ok1 && ok2 && email != "" && title != "") {
 		logger.NewLog("api - addNote()", 2, nil, "Required fields are missing in r.Context", nil)
 		apiError(w, r, http.StatusBadRequest, errRequiredFieldsMissing)
 		return
 	}
 
-	var group_id int
 	var err error
-	if group_id_string == "" {
-		group_id = 0
-	} else {
+	group_id := -1
+	group_id_string, ok3 := data["group_id"]
+	if ok3 && group_id_string != "" {
 		group_id, err = strconv.Atoi(group_id_string)
 		if err != nil {
 			logger.NewLog("api - addNote()", 2, err, "Filed to convert string to int", "string = "+group_id_string)
@@ -469,7 +522,7 @@ func (h *Handler) addNote(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	err = h.NotesService.AddNote(login, title, text, group_id)
+	err = h.NotesService.AddNote(email, title, group_id)
 	if err != nil {
 		apiError(w, r, http.StatusInternalServerError, nil)
 		return
@@ -493,9 +546,9 @@ func (h *Handler) delNote(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	string_id, ok1 := data["id"]
-	login, ok2 := data["login"]
-	if !(ok1 && ok2 && string_id != "" && login != "") {
+	string_id := r.URL.Query().Get("id")
+	email, ok1 := data["email"]
+	if !(ok1 && string_id != "" && email != "") {
 		logger.NewLog("api - delNote()", 2, nil, "Required fields are missing in r.Contex", nil)
 		apiError(w, r, http.StatusBadRequest, errRequiredFieldsMissing)
 		return
@@ -508,7 +561,7 @@ func (h *Handler) delNote(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = h.NotesService.DelNote(id, login)
+	err = h.NotesService.DelNote(id, email)
 	if err == repository.ErrInvalidData {
 		apiError(w, r, http.StatusBadRequest, repository.ErrInvalidData)
 		return
@@ -536,36 +589,39 @@ func (h *Handler) updateNote(w http.ResponseWriter, r *http.Request) {
 	}
 
 	string_id, ok1 := data["id"]
-	login, ok2 := data["login"]
-	title, ok3 := data["title"]
-	text, ok4 := data["text"]
-	group_id_string, ok5 := data["group_id"]
-	if !(ok1 && ok2 && ok3 && ok4 && ok5 && string_id != "" && login != "" && title != "") {
+	email, ok2 := data["email"]
+	if !(ok1 && ok2 && string_id != "" && email != "") {
 		logger.NewLog("api - updateNote()", 2, nil, "Required fields are missing in r.Contex", nil)
 		apiError(w, r, http.StatusBadRequest, errRequiredFieldsMissing)
 		return
 	}
 
-	id, err := strconv.Atoi(string_id)
-	if err != nil {
-		logger.NewLog("api - updateNote()", 2, err, "Filed to convert string to int", "string = "+string_id)
-		apiError(w, r, http.StatusInternalServerError, nil)
-		return
-	}
+	// id, err := strconv.Atoi(string_id)
+	// if err != nil {
+	// 	logger.NewLog("api - updateNote()", 2, err, "Filed to convert string to int", "string = "+string_id)
+	// 	apiError(w, r, http.StatusInternalServerError, nil)
+	// 	return
+	// }
 
-	var group_id int
-	if group_id_string == "" {
-		group_id = 0
-	} else {
-		group_id, err = strconv.Atoi(group_id_string)
-		if err != nil {
-			logger.NewLog("api - updateNote()", 2, err, "Filed to convert string to int", "string = "+group_id_string)
-			apiError(w, r, http.StatusInternalServerError, nil)
-			return
-		}
-	}
+	// text := data["text"]
 
-	err = h.NotesService.UpdateNote(id, login, title, text, group_id)
+	// title := data["title"]
+
+	// group_id_string := data["group_id"]
+
+	// var group_id int
+	// if group_id_string == "" {
+	// 	group_id = -1
+	// } else {
+	// 	group_id, err = strconv.Atoi(group_id_string)
+	// 	if err != nil {
+	// 		logger.NewLog("api - updateNote()", 2, err, "Filed to convert string to int", "string = "+group_id_string)
+	// 		apiError(w, r, http.StatusInternalServerError, nil)
+	// 		return
+	// 	}
+	// }
+
+	err := h.NotesService.UpdateNote(data)
 	if err == repository.ErrInvalidData {
 		apiError(w, r, http.StatusBadRequest, repository.ErrInvalidData)
 		return
@@ -592,28 +648,14 @@ func (h *Handler) getNotesList(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	login, ok1 := data["login"]
-	if !(ok1 && login != "") {
-		logger.NewLog("api - getNotesList()", 2, nil, "Required fields are missing in r.Contex", "login")
+	email, ok1 := data["email"]
+	if !(ok1 && email != "") {
+		logger.NewLog("api - getNotesList()", 2, nil, "Required fields are missing in r.Contex", "email")
 		apiError(w, r, http.StatusBadRequest, errRequiredFieldsMissing)
 		return
 	}
 
-	group_id_string := r.URL.Query().Get("group_id")
-	var group_id int
-	var err error
-	if group_id_string == "" {
-		group_id = 0
-	} else {
-		group_id, err = strconv.Atoi(group_id_string)
-		if err != nil {
-			logger.NewLog("api - getNotesList()", 2, err, "Filed to convert string to int", "string = "+group_id_string)
-			apiError(w, r, http.StatusInternalServerError, nil)
-			return
-		}
-	}
-
-	list, err := h.NotesService.GetNotesList(login, group_id)
+	list, err := h.NotesService.GetNotesList(email)
 	if err != nil {
 		apiError(w, r, http.StatusInternalServerError, nil)
 		return
@@ -642,10 +684,10 @@ func (h *Handler) getNote(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	login, ok := data["login"]
+	email, ok := data["email"]
 	string_id := r.URL.Query().Get("id")
-	if !(ok && login != "" && string_id != "") {
-		logger.NewLog("api - getNote()", 2, nil, "Required fields are missing in r.Contex", "login="+login+" id="+string_id)
+	if !(ok && email != "" && string_id != "") {
+		logger.NewLog("api - getNote()", 2, nil, "Required fields are missing in r.Contex", "email="+email+" id="+string_id)
 		apiError(w, r, http.StatusBadRequest, errRequiredFieldsMissing)
 		return
 	}
@@ -657,7 +699,7 @@ func (h *Handler) getNote(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	note, err := h.NotesService.GetNote(id, login)
+	note, err := h.NotesService.GetNote(id, email)
 	if err != nil {
 		apiError(w, r, http.StatusInternalServerError, nil)
 		return

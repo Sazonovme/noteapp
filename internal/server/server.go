@@ -42,15 +42,13 @@ func Start(ctx context.Context) error {
 	defer db.Close()
 
 	// init deps
-	authRepo := repository.NewAuthRepository(db)
 	userRepo := repository.NewUserRepository(db)
 	noteRepo := repository.NewNotesRepository(db)
 
-	authService := service.NewAuthService(authRepo)
 	userService := service.NewUserService(userRepo)
 	noteService := service.NewNotesService(noteRepo)
 
-	handler := api.NewHandler(userService, authService, noteService)
+	handler := api.NewHandler(userService, noteService)
 
 	srv := &http.Server{
 		Addr:    config.Addr,

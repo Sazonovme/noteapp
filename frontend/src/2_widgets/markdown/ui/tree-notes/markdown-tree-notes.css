@@ -1,3 +1,21 @@
+.custom-tree-node {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    width: 100%;
+}
+
+.buttons {
+    display: none;
+    margin-right: 10px;
+    gap: 10px;
+}
+
+.el-tree-node__content:hover .buttons {
+    display: flex;
+}
+
 .button {
     display: flex;
     align-items: center;
@@ -35,4 +53,36 @@
     mask-image: url('/public/icons/pencil-square.svg');
     -webkit-mask-position: center;
     -webkit-mask-repeat: no-repeat;
+}
+
+.img {
+    height: 20px;
+    width: 20px;
+
+    transition: all .2s;
+
+    -webkit-mask-position: center;
+    -webkit-mask-repeat: no-repeat;
+}
+
+.img:hover {
+    opacity: .8;
+}
+
+.img-folder-plus {
+    background-color: var(--w-primary);
+    -webkit-mask-image: url('/public/icons/folder-plus.svg');
+    mask-image: url('/public/icons/folder-plus.svg');
+}
+
+.img-document-plus {
+    background-color: var(--w-success);
+    -webkit-mask-image: url('/public/icons/document-plus.svg');
+    mask-image: url('/public/icons/document-plus.svg');
+}
+
+.img-folder-minus {
+    background-color: var(--w-danger);
+    -webkit-mask-image: url('/public/icons/folder-minus.svg');
+    mask-image: url('/public/icons/folder-minus.svg');
 }

@@ -4,8 +4,10 @@ import { FormInstance } from 'element-plus';
 
 import { registration } from '@features/user/api';
 
+import { ACCESS_TOKEN, REFRESH_TOKEN } from '@entities/user/constants';
+
 import { ROUTES_PATH_COMMON } from '@shared/constants';
-import { storage, LOCAL_STORAGE_UPDATED_EVENT } from '@shared/utils';
+import { storage } from '@shared/utils';
 
 const useState = () => {
     const isLoading = ref(false);
@@ -37,12 +39,12 @@ const useActions = (state: UseActionsType) => {
                 if (valid) {
                     state.isLoading.value = true;
                     const response = await registration({
-                        login: form.email.value, //TODO потом добавить phone
-                        username: form.username.value,
-                        password: form.password.value,
+                        email: state.ruleForm.login,
+                        password: state.ruleForm.password,
                     });
 
-                    storage.local.setItem(LOCAL_STORAGE_UPDATED_EVENT, response.data.token);
+                    storage.local.setItem(ACCESS_TOKEN, response.data.accessToken);
+                    storage.local.setItem(REFRESH_TOKEN, response.data.refreshToken);
                     state.navigate.push(ROUTES_PATH_COMMON.HOME);
                 } else {
                     console.log('no valid fields!', fields);

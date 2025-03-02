@@ -39,6 +39,8 @@
         </form>
     </div>
 
+    <strong>Выйти из аккаунта</strong>
+
     <button id="btn" onclick="update()">Обновить токены</button>
 
 
@@ -47,8 +49,6 @@
         <strong>Добавить заметку</strong>
         <label for="add_note_title">Заголовок</label>
         <input type="text" name="add_note_title">
-        <label for="add_note_text">Текст</label>
-        <input type="text" name="add_note_text">
         <label for="add_note_group">id группы</label>
         <input type="text" name="add_note_group">
         <button onclick="addNote()">Добавить заметку</button>
@@ -78,9 +78,9 @@
         <button onclick="getNote()">Получить заметку</button>
         <hr>
 
+        <br>
+        <br>
         <strong>Получить список заметок</strong>
-        <label for="get_note_list_group">Group-id</label>
-        <input type="text" name="get_note_list_group">
         <button onclick="getNoteList()">Получить заметки</button>
 
     </div>
@@ -90,6 +90,8 @@
         <strong>Добавить группу</strong>
         <label for="add_group_name">Имя группы</label>
         <input type="text" name="add_group_name">
+        <label for="add_group_pid">Ид родителя</label>
+        <input type="text" name="add_group_pid">
         <button onclick="addGroup()">Добавить группу</button>
         <hr>
 
@@ -104,11 +106,11 @@
         <input type="text" name="update_group_id">
         <label for="update_group_name">New name</label>
         <input type="text" name="update_group_name">
+        <label for="update_group_pid">New pid</label>
+        <input type="text" name="update_group_pid">
         <button onclick="updateGroup()">Обновить имя</button>
         <hr>
 
-        <strong>Получить список групп</strong>
-        <button onclick="getGroupList()">Получить список групп</button>
     </div>
 
 </body>
@@ -137,13 +139,15 @@
                 'Content-Type': 'application/json',
             },
             data: {
-                login: name,
+                email: name,
                 password: password,
                 fingerprint: "this fingerprint"
             }
         })
-            .then(function (response) {
-                console.log(response);
+            .then(res => {
+                sessionStorage.setItem('accessToken', res.data.accessToken)
+                sessionStorage.setItem('refreshToken', res.data.refreshToken)
+                console.log("SUCSSES, tokens:" + res.data.accessToken + " / " + res.data.refreshToken)
             })
             .catch(function (error) {
                 console.log(error);
@@ -168,9 +172,9 @@
                 'Content-Type': 'application/json',
             },
             data: {
-                login: name2,
+                email: name2,
                 password: password2,
-                fingerprint: "this fingerprint"
+                fingerprint: "this fingerprint5"
             }
         })
             .then(res => {
@@ -182,6 +186,36 @@
                 console.log(error);
             });
     })
+
+    //logout
+    function logOut() {
+
+        axios.post('http://localhost:8080/refresh-token', {
+            mode: 'no-cors',
+            headers: {
+                'Access-Control-Allow-Origin': '*',
+                Accept: 'application/json',
+                'Content-Type': 'application/json',
+            },
+            data: {
+                refreshToken: refToken,
+                fingerprint: "this fingerprint"
+            }
+        }).then(res => {
+            sessionStorage.setItem('accessToken', res.data.accessToken)
+            sessionStorage.setItem('refreshToken', res.data.refreshToken)
+            console.log("SUCSSES, tokens:" + res.data.accessToken + " / " + res.data.refreshToken)
+
+            const tokenParts = res.data.accessToken.split('.'); // Разделяем токен на части
+            const decodedHeader = JSON.parse(atob(tokenParts[0])); // Декодируем заголовок
+            const decodedPayload = JSON.parse(atob(tokenParts[1])); // Декодируем полезную нагрузку
+
+            const D = new Date(1000 * decodedPayload.exp); // объект даты
+            D.toISOString()  // "2021-08-13T05:51:22.999Z"
+
+            console.log(D)
+        })
+    }
 
     // update token
     function update() {
@@ -221,24 +255,33 @@
     function addNote() {
 
         title = document.getElementsByName("add_note_title")[0].value
-        text = document.getElementsByName("add_note_text")[0].value
         group = document.getElementsByName("add_note_group")[0].value
         // if (group == null) group = 0
 
-        accessToken = sessionStorage.getItem('accessToken')
-        console.log(
-            {
+        if (title != "" && group != "") {
+            data = {
                 title: title,
-                text: text,
                 group_id: group,
-                accessToken: accessToken,
-            })
+            }
+        } else if (title != "") {
+            data = {
+                title: title
+            }
+        } else if (group != "") {
+            data = {
+                group_id: group
+            } 
+        } else {
+            data = {
+                title: "",
+                group_id: ""
+            }
+        }
 
-        axios.post('http://localhost:8080/addNote', {
-            title: title,
-            text: text,
-            group_id: group,
-        },
+        accessToken = sessionStorage.getItem('accessToken')
+        console.log(data)
+
+        axios.post('http://localhost:8080/addNote', data,
             {
                 mode: 'no-cors',
                 headers: {
@@ -258,24 +301,27 @@
         title = document.getElementsByName("update_note_title")[0].value
         text = document.getElementsByName("update_note_text")[0].value
         group = document.getElementsByName("update_note_group")[0].value
-        if (group == null) group = 0
+
+        data = {
+            id: id,
+        }
+        
+        if (title != "") {
+            data.title = title
+        }
+
+        if (text != "") {
+            data.text = text
+        }
+
+        if (group != "") {
+            data.group_id = group
+        }
 
         accessToken = sessionStorage.getItem('accessToken')
-        console.log(
-            {
-                id: id,
-                title: title,
-                text: text,
-                group: group,
-                accessToken: accessToken,
-            })
+        console.log(data)
 
-        axios.put('http://localhost:8080/updateNote', {
-            id: id,
-            title: title,
-            text: text,
-            group_id: group,
-        },
+        axios.put('http://localhost:8080/updateNote', data,
             {
                 mode: 'no-cors',
                 headers: {
@@ -300,16 +346,15 @@
                 accessToken: accessToken,
             })
 
-        axios.delete('http://localhost:8080/delNote', {
+        URLstrDelNote = 'http://localhost:8080/delNote?id=' + id
+
+        axios.delete(URLstrDelNote, {
             mode: 'no-cors',
             headers: {
                 'Access-Control-Allow-Origin': '*',
                 Accept: 'application/json',
                 'Content-Type': 'application/json',
                 Authorization: 'Bearer ' + accessToken,
-            },
-            data: {
-                id: id,
             }
         }).then(
             res => console.log(res)
@@ -344,18 +389,16 @@
 
     function getNoteList() {
 
-        id = document.getElementsByName("get_note_list_group")[0].value
+        // id = document.getElementsByName("get_note_list_group")[0].value
 
         accessToken = sessionStorage.getItem('accessToken')
         console.log(
             {
-                group_id: id,
+                // group_id: id,
                 accessToken: accessToken,
             })
 
-        URLstr = 'http://localhost:8080/getNotesList?group_id=' + id
-
-        axios.get(URLstr, {
+        axios.get('http://localhost:8080/getNotesList', {
             mode: 'no-cors',
             headers: {
                 'Access-Control-Allow-Origin': '*',
@@ -373,17 +416,27 @@
     function addGroup() {
 
         name = document.getElementsByName("add_group_name")[0].value
-
+        pid = document.getElementsByName("add_group_pid")[0].value
+        
         accessToken = sessionStorage.getItem('accessToken')
-        console.log(
-            {
+
+        if (Number(pid) > 0) {
+            data = {
                 name: name,
-                accessToken: accessToken,
-            })
+                parentGroupId: pid    
+            }
+        } else {
+            data = {
+                name: name,   
+            }    
+        }
 
+        console.log(
+            data)
+       
 
-
-        axios.post('http://localhost:8080/addGroup', { name: name },
+        axios.post('http://localhost:8080/addGroup', 
+            data,
             {
                 mode: 'no-cors',
                 headers: {
@@ -408,7 +461,7 @@
                 accessToken: accessToken,
             })
 
-        axios.delete('http://localhost:8080/delGroup', {
+        axios.delete('http://localhost:8080/delGroup?id=' + id, {
             mode: 'no-cors',
             headers: {
                 'Access-Control-Allow-Origin': '*',
@@ -428,19 +481,30 @@
 
         id = document.getElementsByName("update_group_id")[0].value
         name = document.getElementsByName("update_group_name")[0].value
+        pid = document.getElementsByName("update_group_pid")[0].value
 
-        accessToken = sessionStorage.getItem('accessToken')
-        console.log(
-            {
+        if (pid != "" && name != "") {
+            data = {
                 id: id,
                 name: name,
-                accessToken: accessToken,
-            })
+                parentGroupId: pid
+            }
+        } else if (pid != "") {
+            data = {
+                id: id,
+                parentGroupId: pid
+            }   
+        } else if (name != "") {
+            data = {
+                id: id,
+                name: name,
+            }
+        }
 
-        axios.put('http://localhost:8080/updateGroup', {
-            id: id,
-            name: name,
-        },
+        accessToken = sessionStorage.getItem('accessToken')
+        console.log(data)
+
+        axios.put('http://localhost:8080/updateGroup', data,
             {
                 mode: 'no-cors',
                 headers: {

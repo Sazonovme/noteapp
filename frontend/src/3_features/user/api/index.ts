@@ -1,7 +1,7 @@
-import { axios } from '@shared/api';
+import { axios, AxiosPromise } from '@shared/api';
 
-export const login = (val: Record<string, string>) => axios.post('/management/auth/login', val);
+export const login = (val: { email: string, password: string }): AxiosPromise<{ accessToken: string, refreshToken: string }> => axios.post('/sign-in', { data: val });
 
-export const logout = () => axios.get('/management/oauth2/logout');
+export const logout = () => axios.get('/logout');
 
-export const registration = (val: Record<string, string>) => axios.post('/management/oauth2/logout', val);
+export const registration = (val: { email: string, password: string }): AxiosPromise<{ accessToken: string, refreshToken: string }> => axios.post('/sign-up', { data: val });

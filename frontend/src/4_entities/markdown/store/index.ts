@@ -13,5 +13,32 @@ export const useMarkdownStore = defineStore('markdown', () => {
         storage.local.setItem(MARKDOWN_MODE_LOCAL, String(val));
     };
 
-    return { readOnly, setReadOnly };
+    const tree = ref<Record<string, any>[]>([]);
+    const setTree = (val: {}[]) => {
+        tree.value = val;
+    };
+
+    const currentOpenIdNode = ref('');
+    const setCurrentOpenIdNode = (val: string) => {
+        currentOpenIdNode.value = val;
+    };
+
+    const currentOpenTextNode = ref('');
+    const setCurrentOpenTextNode = (val: string) => {
+        currentOpenTextNode.value = val;
+    };
+
+    return {
+        readOnly,
+        setReadOnly,
+
+        tree,
+        setTree,
+
+        currentOpenIdNode,
+        setCurrentOpenIdNode,
+
+        currentOpenTextNode,
+        setCurrentOpenTextNode,
+    };
 });

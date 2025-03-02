@@ -22,8 +22,8 @@ func NewUserRepository(db *sql.DB) *UserRepository {
 
 func (r *UserRepository) CreateUser(u *model.User) error {
 	_, err := r.db.Exec(
-		"INSERT INTO users(login, password) VALUES ($1, $2)",
-		u.Login, u.Password,
+		"INSERT INTO users(email, password) VALUES ($1, $2)",
+		u.Email, u.Password,
 	)
 	if err != nil {
 		return err
@@ -32,14 +32,14 @@ func (r *UserRepository) CreateUser(u *model.User) error {
 	return nil
 }
 
-func (r *UserRepository) FindByLogin(login string) (*model.User, error) {
+func (r *UserRepository) FindByLogin(email string) (*model.User, error) {
 	u := model.User{}
 	if err := r.db.QueryRow(
-		"SELECT id, login, password FROM users WHERE login=$1",
-		login,
+		"SELECT id, email, password FROM users WHERE email=$1",
+		email,
 	).Scan(
 		&u.Id,
-		&u.Login,
+		&u.Email,
 		&u.Password,
 	); err != nil {
 		if err == sql.ErrNoRows {
