@@ -672,3 +672,33 @@ func (h *Handler) getNote(w http.ResponseWriter, r *http.Request) {
 	logger.NewLog("api - getNote()", 5, nil,
 		"OUT - Note geted "+time.Now().Format("02.01 15:04:05"), nil)
 }
+
+func (h *Handler) DeleteNoteHandler(w http.ResponseWriter, r *http.Request) {
+	// Извлекаем query параметры
+	noteIDParam := r.URL.Query().Get("note_id")
+	login := r.URL.Query().Get("login")
+
+	// Проверяем, что параметры переданы
+	if noteIDParam == "" || login == "" {
+		http.Error(w, "Missing note_id or login parameter", http.StatusBadRequest)
+		return
+	}
+
+	// Преобразуем note_id в int
+	noteID, err := strconv.Atoi(noteIDParam)
+	if err != nil {
+		http.Error(w, "Invalid note_id parameter", http.StatusBadRequest)
+		return
+	}
+
+	// Вызываем сервис для удаления
+	err = h.NotesService.DelNote(noteID, login)
+	if err != nil {
+		http.Error(w, "Failed to delete note", http.StatusInternalServerError)
+		return
+	}
+
+	// Успешный ответ
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte("Note deleted successfully"))
+}
