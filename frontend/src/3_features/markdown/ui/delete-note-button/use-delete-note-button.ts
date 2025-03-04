@@ -22,6 +22,7 @@ const useActions = (emit: (e: string) => void, state: UseActionsType, store: Ret
     const deleteNote = async () => {
         state.dialogVisible.value = false;
         await deleteNoteApi(String(store.currentOpenNodeInfo.id));
+        location.reload();
         emit('success-delete');
     };
 

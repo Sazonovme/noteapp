@@ -1,0 +1,13 @@
+.input {
+    z-index: -1;
+    text-align-last: center;
+}
+
+.input > * {
+    padding: 0 !important;
+
+    border: none !important;
+
+    background-color: var(--w-transparent) !important;
+    box-shadow: none !important;
+}
