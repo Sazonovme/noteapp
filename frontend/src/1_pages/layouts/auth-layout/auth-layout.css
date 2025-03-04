@@ -7,13 +7,21 @@
 .link {
     position: absolute;
     z-index: 10;
-    padding: 20px !important;
+    margin: 15px;
 }
 
-.img {
-    padding: var(--w-indent-3xs);
-    border: var(--w-border-solid-md);
-    border-radius: var(--w-border-radius-md);
+.home-img {
+    height: 20px;
+    width: 20px;
+
+    background-color: var(--w-gray-1);
+
+    transition: background-color .2s;
+
+    -webkit-mask-image: url('/public/icons/home.svg');
+    mask-image: url('/public/icons/home.svg');
+    -webkit-mask-position: center;
+    -webkit-mask-repeat: no-repeat;
 }
 
 .auth-button {

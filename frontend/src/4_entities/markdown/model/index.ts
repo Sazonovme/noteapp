@@ -26,3 +26,11 @@ export type PreparedTreeListType = {
     isFolder: boolean,
     isNote: boolean,
 }[];
+
+export type NodeInfoType = {
+    group_id: number
+    id: number
+    text: string
+    title: string
+    user_email: string
+};

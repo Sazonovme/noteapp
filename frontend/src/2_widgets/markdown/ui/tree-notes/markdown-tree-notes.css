@@ -81,6 +81,12 @@
     mask-image: url('/public/icons/document-plus.svg');
 }
 
+.img-pencil-square {
+    background-color: var(--w-warning);
+    -webkit-mask-image: url('/public/icons/pencil-square.svg');
+    mask-image: url('/public/icons/pencil-square.svg');
+}
+
 .img-folder-minus {
     background-color: var(--w-danger);
     -webkit-mask-image: url('/public/icons/folder-minus.svg');

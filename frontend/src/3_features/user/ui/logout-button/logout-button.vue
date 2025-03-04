@@ -6,7 +6,7 @@
             circle
             plain
         >
-            <div class="user-img" />
+            <div class="logout-img" />
         </ElButton>
     </RouterLink>
 </template>
@@ -15,4 +15,4 @@
 import { ElButton } from 'element-plus';
 </script>
 
-<style src="./sign-in-button.css" scoped />
+<style src="./logout-button.css" scoped />

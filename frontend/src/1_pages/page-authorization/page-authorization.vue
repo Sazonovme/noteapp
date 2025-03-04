@@ -7,7 +7,8 @@
         <div class="substrate" />
         <div class="forms">
             <SignIn v-if="$route.query.type === 'signin'" />
-            <SignUp v-if="$route.query.type === 'signup'" />
+            <SignUp v-else-if="$route.query.type === 'signup'" />
+            <SignIn v-else />
         </div>
     </div>
 </template>

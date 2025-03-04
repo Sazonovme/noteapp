@@ -1,8 +1,7 @@
 <template>
     <div>
-        <span>Readonly mode: </span>
         <ElSwitch
-            size="small"
+            size="default"
             :model-value="markdownStore.readOnly"
             @change="markdownStore.setReadOnly"
         />

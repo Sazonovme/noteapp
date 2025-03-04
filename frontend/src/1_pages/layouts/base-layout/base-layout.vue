@@ -1,8 +1,14 @@
 <template>
     <div class="container">
-        <!-- todo это нужно вынести в отельный компонент -->
         <nav>
-            <SignInButton class="auth-button" />
+            <LogoutButton
+                v-if="isAuth"
+                class="auth-button"
+            />
+            <SignInButton
+                v-else
+                class="auth-button"
+            />
         </nav>
 
         <main>
@@ -12,7 +18,11 @@
 </template>
 
 <script setup lang="ts">
-import { SignInButton } from '@features/user';
+import { SignInButton, LogoutButton } from '@features/user';
+
+import { useCheckIsAuth } from '@entities/user';
+
+const { isAuth } = useCheckIsAuth();
 </script>
 
 <style src="./base-layout.css" scoped />

@@ -4,10 +4,18 @@ import { ref } from 'vue';
 import { storage } from '@shared/utils';
 
 import { MARKDOWN_MODE_LOCAL } from '../constants';
+import { NodeInfoType } from '../model';
+
+const DEFAULT_NODE_INFO: NodeInfoType = {
+    group_id: 0,
+    id: 0,
+    text: 'Default text Node',
+    title: 'Default title Node',
+    user_email: 'Root',
+};
 
 export const useMarkdownStore = defineStore('markdown', () => {
     const readOnly = ref((storage.local.getItem(MARKDOWN_MODE_LOCAL) ?? 'true') === 'true');
-
     const setReadOnly = (val: boolean) => {
         readOnly.value = val;
         storage.local.setItem(MARKDOWN_MODE_LOCAL, String(val));
@@ -18,14 +26,9 @@ export const useMarkdownStore = defineStore('markdown', () => {
         tree.value = val;
     };
 
-    const currentOpenIdNode = ref('');
-    const setCurrentOpenIdNode = (val: string) => {
-        currentOpenIdNode.value = val;
-    };
-
-    const currentOpenTextNode = ref('');
-    const setCurrentOpenTextNode = (val: string) => {
-        currentOpenTextNode.value = val;
+    const currentOpenNodeInfo = ref(DEFAULT_NODE_INFO);
+    const setCurrentOpenNodeInfo = (val: NodeInfoType) => {
+        currentOpenNodeInfo.value = val;
     };
 
     return {
@@ -35,10 +38,7 @@ export const useMarkdownStore = defineStore('markdown', () => {
         tree,
         setTree,
 
-        currentOpenIdNode,
-        setCurrentOpenIdNode,
-
-        currentOpenTextNode,
-        setCurrentOpenTextNode,
+        currentOpenNodeInfo,
+        setCurrentOpenNodeInfo,
     };
 });

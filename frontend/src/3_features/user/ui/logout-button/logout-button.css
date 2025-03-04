@@ -1,11 +1,11 @@
-.user-img {
+.logout-img {
     height: 20px;
     width: 20px;
 
     background-color: var(--w-primary);
     
-    -webkit-mask-image: url('/public/icons/user.svg');
-    mask-image: url('/public/icons/user.svg');
+    -webkit-mask-image: url('/public/icons/logout.svg');
+    mask-image: url('/public/icons/logout.svg');
     -webkit-mask-position: center;
     -webkit-mask-repeat: no-repeat;
 }

@@ -22,8 +22,13 @@
                         class="custom-tree-node"
                         @click="() => data.isNote && actions.onOpenNote(data.id)"
                     >
-                        <span @click="() => {console.log(data)}">{{ data.title }}</span>
+                        <span>{{ data.title }}</span>
                         <span class="buttons">
+                            <div
+                                v-if="data.key !== '0'"
+                                class="img img-pencil-square"
+                                @click="(e: any) => data.isFolder ? actions.onEditFolder(data.id, data.title, e) : actions.onEditNote(data.id, data.title, e)"
+                            />
                             <div
                                 v-if="data.isFolder"
                                 class="img img-document-plus"
@@ -35,7 +40,7 @@
                                 @click="(e: any) => actions.onCreateNewFolder(data.id, e)"
                             />
                             <div
-                                v-if="data.isFolder"
+                                v-if="data.isFolder && data.key !== '0'"
                                 class="img img-folder-minus"
                                 @click="(e: any) => actions.onDeleteFolder(data.id, e)"
                             />

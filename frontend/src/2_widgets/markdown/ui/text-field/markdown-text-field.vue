@@ -2,11 +2,11 @@
     <div class="text-container">
         <MarkdownRender
             v-if="markdownStore.readOnly"
-            :markdown-text="markdownStore.currentOpenTextNode"
+            :markdown-text="markdownStore.currentOpenNodeInfo.text"
         />
         <MarkdownWriteArea
             v-else
-            v-model="markdownStore.currentOpenTextNode"
+            v-model="markdownStore.currentOpenNodeInfo.text"
         />
     </div>
 </template>
@@ -18,7 +18,7 @@ import { MarkdownRender } from '@entities/markdown';
 
 import { useMarkdownTextField } from './use-markdown-text-field';
 
-const { state, markdownStore } = useMarkdownTextField();
+const { markdownStore } = useMarkdownTextField();
 </script>
 
 <style src="./markdown-text-field.css" scoped />
